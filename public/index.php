@@ -47,7 +47,7 @@ if(is_array($match)){
     require RACINE.DS.'public'.DS.'templates'.DS.'dashboard-default'.DS.'modules'.DS.$match['target'].'.func.php';
     require '..'.DS.'public'.DS.'templates'.DS.'dashboard-default'.DS.$match['target'].'.php';
   }else{
-    require RACINE.DS.'public'.DS.'modules'.DS.$match['target'].'.func.php';
+    require RACINE.DS.'lib'.DS.'modules'.DS.$match['target'].'.func.php';
     require RACINE.DS.'public'.DS.'parts'.DS.$match['target'].'.php';
   }
   $contentForLayout = ob_get_clean();
