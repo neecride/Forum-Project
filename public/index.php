@@ -44,8 +44,8 @@ if(is_array($match)){
   ob_start();
   if($getUri[1] == 'admin'){
     is_admin();
-    require RACINE.DS.'public'.DS.'templates'.DS.'dashboard-default'.DS.'modules'.DS.$match['target'].'.func.php';
-    require '..'.DS.'public'.DS.'templates'.DS.'dashboard-default'.DS.$match['target'].'.php';
+    require RACINE.DS.'lib'.DS.'modules'.DS.$match['target'].'.func.php';
+    require RACINE.DS.'public'.DS.'templates'.DS.'dashboard-default'.DS.$match['target'].'.php';
   }else{
     require RACINE.DS.'lib'.DS.'modules'.DS.$match['target'].'.func.php';
     require RACINE.DS.'public'.DS.'parts'.DS.$match['target'].'.php';
