@@ -3,26 +3,99 @@
 namespace App;
 
 use PDO;
+use App\URL;
 
 Class Pagination extends Database{
 	
+	private $count;
+
 	/*
 	* return instance Parameters
 	*/
-	private function Params(){
+	private function Params()
+	{
 		return new Parameters();
 	}
+
+	private function GetApp(){
+		return new App();
+	}
 	
-	//si besoin on a notre objet pdo
-	public function thisPDO(){
+	/*
+	* notre objet PDO
+	*/
+	public function thisPDO()
+	{
 		return $this->Getpdo();
 	}
 
-	public function Perpage(){
+	/*
+	* instance de la class Parameters qui retrourne le nombre de pages
+	*/
+	public function Perpage(): int
+	{
 		return (int) $this->Params()->GetParam(2);
 	}
 
-	public function subLinkPage($url,$countid){ 
+	/*
+	* initialise la page 
+	*/
+	public function CurrentPage(): int
+	{
+		return URL::getPositiveInt('page', 1);
+	}
+
+	/*
+	* return count ellements in database
+	*/
+	public function CountIdForpagination(string $statement,string $attr=null)
+	{
+		if($attr != null){
+
+			if($this->count === null){
+
+				$smtp = $this->Getpdo()->prepare($statement);
+	
+				$smtp->execute([intval($attr)]);
+	
+				$this->count = (int) $smtp->fetch(PDO::FETCH_NUM)[0];
+			}
+
+			return $this->count;
+
+		}else{
+
+			if($this->count === null){
+				$this->count = (int) $this->Getpdo()->query($statement)->fetch(PDO::FETCH_NUM)[0];
+			}
+
+			return $this->count;
+		}
+	}
+
+	public function isPage(): int{
+		return ceil($this->count/$this->Params()->GetParam(2));
+	}
+
+	/*
+	* check si la page appeler existe
+	*/
+	public function isExistPage(string $url)
+	{
+		if($this->CurrentPage() > $this->isPage() && $this->CurrentPage() > 1) {
+			$this->GetApp()->setflash("Ce numéro de page n'existe pas","orange");
+			header('Location:' . $url);
+			http_response_code(301);
+			exit();
+		}
+	}
+
+
+	/*
+	* génère un lien qui pointe vers la bonne page 
+	*/
+	public function subLinkPage(string $url,int $countid)
+	{ 
 		
 		$tt = ceil($countid/$this->Params()->GetParam(2));
 
@@ -43,7 +116,11 @@ Class Pagination extends Database{
 
 	}
 
-	public function userLinkPage($url,$id,$countid){
+	/*
+	* retourn une mini pagination 
+	*/
+	public function userLinkPage(string $url,int $id,int $countid)
+	{
 				
 		$tt = ceil($countid/$this->Params()->GetParam(2));
 
@@ -59,77 +136,53 @@ Class Pagination extends Database{
 	}
 
 
-	public function offset($PerPage,$CurrentPage){
-
-		return $PerPage * ($CurrentPage - 1);
-
-	}
-	
-	public function isExistPage($CurrentPage, $pages,$url){
-		if($CurrentPage > $pages && $CurrentPage > 1) {
-			setflash("Ce numéro de page n'hexiste pas","orange");
-			header('Location:' . $url);
-			http_response_code(301);
-			exit();
-		}
-	}
-
-	/*
-	* return count article in database
-	*/
-	public function CountIDForpagination($statement,$attr=null)
+	public function offset(): int 
 	{
-		if($attr != null){
 
-			$smtp = $this->Getpdo()->prepare($statement);
+		return $this->Params()->GetParam(2) * ($this->CurrentPage() - 1);
 
-			$smtp->execute([intval($attr)]);
-
-			$Count = (int) $smtp->fetch(PDO::FETCH_NUM)[0];
-
-			return $Count;
-
-		}else{
-			$Count = (int) $this->Getpdo()->query($statement)->fetch(PDO::FETCH_NUM)[0];
-
-			return $Count;
-		}
 	}
 
-
-	public function Prev($CurrentPage, $url) {
-		if ($CurrentPage > 1) {
-			$link = $url;
-			if ($CurrentPage > 2) {
-				$link .= "?page=" . ($CurrentPage - 1);
+	public function Prev(string $url) 
+	{
+		if($this->isPage() >= 1):
+			if ($this->CurrentPage() > 1) {
+				$link = $url;
+				if ($this->CurrentPage() > 2) {
+					$link .= "?page=" . ($this->CurrentPage() - 1);
+				}
+				return "<li class='page-item'><a class='page-link' href='$link'><i class='fas fa-angle-double-left'></i></a></li>";
+			} else {
+				return '<li class="disabled page-item"><a class="page-link"><i class="fas fa-angle-double-left"></i></a></li>';
 			}
-			return "<li class='page-item'><a class='page-link' href='$link'><i class='fas fa-angle-double-left'></i></a></li>";
-		} else {
-			return '<li class="disabled page-item"><a class="page-link"><i class="fas fa-angle-double-left"></i></a></li>';
-		}
+		endif;
 	}
 
-	public function Next($CurrentPage, $pages, $url) {
+	public function Next(string $url) 
+	{
+		if($this->isPage() >= 1):
+			if ($this->CurrentPage() < $this->isPage()) {
 
-		if ($CurrentPage < $pages) {
+				$curentplus = "?page=" . ($this->CurrentPage()+1);
+				return "<li class='page-item'><a class='page-link' href='$url$curentplus'><i class='fas fa-angle-double-right'></i></a></li>";
 
-			return "<li class='page-item'><a class='page-link' href='$url'><i class='fas fa-angle-double-right'></i></a></li>";
-
-		} else {
-			return '<li class="disabled page-item"><a class="page-link"><i class="fas fa-angle-double-right"></i></a></li>';
-		}
+			} else {
+				return '<li class="disabled page-item"><a class="page-link"><i class="fas fa-angle-double-right"></i></a></li>';
+			}
+		endif;
 	}
 
 
 	/*
 	* return pagination view
 	*/
-	public function pageFor($CurrentPage, $pages, $url){
+	public function pageFor(string $url)
+	{
 
 		$nb=2;
-		for($i=1; $i <= $pages; $i++){
-		  if($i <= $nb || $i > $pages - $nb ||  ($i > $CurrentPage-$nb && $i < $CurrentPage+$nb)){
-			if($i == $CurrentPage) {
+		for($i=1; $i <= $this->isPage(); $i++){
+		  if($i <= $nb || $i > $this->isPage() - $nb ||  ($i > $this->CurrentPage()-$nb && $i < $this->CurrentPage()+$nb)){
+			if($i == $this->CurrentPage()) {
 			  echo '<li class="page-item active"><a class="page-link">'. $i .'</a></li>';
 			} elseif($i == 1) {
 			  echo '<li class="page-item"><a class="page-link" href='.$url.'>'. $i .'</a></li>' ;
@@ -137,10 +190,10 @@ Class Pagination extends Database{
 			  echo '<li class="page-item"><a class="page-link" href='.$url.'?page='.$i.'>'. $i .'</a></li>' ;
 			}
 		  }else{
-			if($i > $nb && $i < $CurrentPage-$nb){
-			  $i = $CurrentPage - $nb;
-			}elseif($i >= $CurrentPage + $nb && $i < $pages-$nb){
-			  $i = $pages - $nb;
+			if($i > $nb && $i < $this->CurrentPage()-$nb){
+			  $i = $this->CurrentPage() - $nb;
+			}elseif($i >= $this->CurrentPage() + $nb && $i < $this->isPage()-$nb){
+			  $i = $this->isPage() - $nb;
 			}
 			$it = ($i-1);
 			echo "<li class='page-item'><a class='page-link' href='$url'?page='$it'>...</a></li>";
