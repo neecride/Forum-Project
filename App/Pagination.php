@@ -117,7 +117,7 @@ Class Pagination extends Database{
 	}
 
 	/*
-	* retourn une mini pagination 
+	* retourne une mini pagination 
 	*/
 	public function userLinkPage(string $url,int $id,int $countid)
 	{
@@ -174,7 +174,7 @@ Class Pagination extends Database{
 
 
 	/*
-	* return pagination view
+	* return pagination numbers
 	*/
 	public function pageFor(string $url)
 	{
