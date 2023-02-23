@@ -1,101 +1,60 @@
 <?php
 
 namespace App;
+use AltoRouter;
 
 class Router {
 
-    /**
-     * @var string
-     */
-    private $viewPath;
-
-    /** 
-     * @var AltoRouter
-    */
-    private $router;
-
-    public function __construct(string $viewPath = null)
-    {
-        $this->viewPath = $viewPath;
-        $this->router = new \AltoRouter();
-    }
-
-    public function get(string $url, string $view, ?string $name = null): self
-    {   
-        $this->router->map('GET|POST', $url, $view, $name);  
-        return $this;
-    }
-
-    public function run(): self
-    {
-        
-        $match = $this->router->match();
-
-        if (is_array($match)){
-
-            if(is_callable($match['target'])){
-          
-              call_user_func_array($match['target'], $match['params']);
-          
-            }else{
-          
-                  $params = $match['params'];
-                  $getUri = explode('/', $_SERVER['REQUEST_URI']);
-                  // if where get administration
-                  if($getUri[1] == 'admin'){
-                    // theme var dashboard
-                    $themeForLayout = "dashboard-default";
-                    // si on est pas admin
-                    is_admin();
-                    //buffer
-                    ob_start();
-                    //logic
-                    require '..'.DS.'public'.DS.'templates'.DS.'dashboard-default'.DS.'modules'.DS.$match['target'].'.func.php';
-                    //templates parts
-                    require '..'.DS.'public'.DS.'templates'.DS.'dashboard-default'.DS.$match['target'].'.php';
-                    $contentForLayout = ob_get_clean();
-                    require_once '..'.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$themeForLayout.'.php';
-                    
-                  }else{
-                    // theme var
-                    $themeForLayout = "reup";
-                    // buffer
-                    ob_start();
-                    //templates parts
-                    //logic
-                    require '..'.DS.'public'.DS.'modules'.DS.$match['target'].'.func.php';
-                    require '..'.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$match['target'].'.php';
-            
-                    $contentForLayout = ob_get_clean();
-                    require_once '..'.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$themeForLayout.'.php';
-          
-                  }
-            }
-          
-          }else{
-          
-              setFlash('<strong>Ho ho !</strong> cette page n\'éxiste pas redirection sur la page d\'erreur','orange');
-              redirect($match->generate('error'));
-          
-          }
-          return $this;
+    private function Route(){
+      $router = new AltoRouter();
+      
+      $router->map('GET|POST', '/', 'home');
+      $router->map('GET|POST', '/home', 'home','home');
+      $router->map('GET|POST', '/logout', 'logout','logout');
+      $router->map('GET'     , '/error', 'error','error');
+      $router->map('GET|POST', '/remember', 'remember','remember');
+      $router->map('GET|POST', '/reset-[*:username]-[*:token]', 'reset','reset');
+      $router->map('GET|POST', '/register', 'register','register');
+      $router->map('GET|POST', '/confirm-[*:username]-[*:token]', 'confirm','confirm');
+      $router->map('GET|POST', '/login', 'login','login');
+      
+      //user account
+      $router->map('GET|POST', '/account', 'account','account');
+      $router->map('GET|POST', '/survey', 'survey','survey');
+      $router->map('GET|POST', '/account-edit', 'account-edit','account-edit');
+      
+      //forum
+      $router->map('GET'     , '/forum', 'forum', 'forum');
+      $router->map('GET'     , '/forum-[*:slug]-[i:id]', 'viewforums','forum-tags');
+      $router->map('GET|POST', '/forum-[i:id]', 'viewtopic','viewtopic');
+      $router->map('GET|POST', '/sticky-[i:id]-[i:sticky]-[*:getcsrf]', 'viewtopic','sticky');
+      $router->map('GET|POST', '/lock-[i:id]-[i:lock]-[*:getcsrf]', 'viewtopic','lock');
+      $router->map('GET|POST', '/unlock-[i:id]-[i:lock]-[*:getcsrf]', 'viewtopic','unlock');
+      $router->map('GET|POST', '/creattopic', 'creattopic','creattopic');
+      $router->map('GET|POST', '/editetopic-[i:id]', 'editetopic','editetopic');
+      $router->map('GET|POST', '/editerep-[i:id]', 'editerep','editerep');
+      
+      //administration
+      $router->map('GET|POST', '/admin/dashboard', 'admin','admin');
+      $router->map('GET'     , '/admin/user', 'user','user');
+      $router->map('GET|POST', '/admin/user-edit-[i:id]-[*:getcsrf]', 'user-edit','user-edit');
+      $router->map('GET|POST', '/admin/user-delete-[i:delid]-[i:rank]-[*:getcsrf]', 'user','user-delete');
+      $router->map('GET|POST', '/admin/user-active-[i:activid]-[i:rank]-[*:getcsrf]', 'user','user-active');
+      $router->map('GET'     , '/admin/tags', 'tags','tags');
+      $router->map('GET|POST', '/admin/tags-add', 'tags-edit','tags-add');
+      $router->map('GET|POST', '/admin/tags-edit-[*:editid]-[*:getcsrf]', 'tags-edit','tags-edit');
+      $router->map('GET|POST', '/admin/tags-delete-[*:delid]-[*:getcsrf]', 'tags-edit','tags-delete');
+      
+      return $router;
 
     }
 
-    /*public function run(): self
-    {
-        $match = $this->router->match();
-        $view = $match['target'];
-        var_dump($view);
+    public function routeGenerate(string $page ,array $params = []){
+      return $this->Route()->generate($page, $params);
+    }
+  
+    public function matchRoute(){
+      return $this->Route()->match();
+    }
 
-        ob_start();
-        require 'public'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.$view.'.func.php';
-        require 'public'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'reup'.DIRECTORY_SEPARATOR.$view.'.php';
-
-
-        $content = ob_get_clean();
-        require_once DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'reup'.DIRECTORY_SEPARATOR.'reup'.'.php';
-
-        return $this;
-    }*/
 }
