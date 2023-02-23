@@ -11,15 +11,21 @@ Class Pagination extends Database{
 	/*
 	* return instance Parameters
 	*/
-	private function Params()
+	public function Params()
 	{
 		return new Parameters();
 	}
 
-	private function GetApp(){
+	public function GetApp()
+	{
 		return new App();
 	}
 	
+	public function GetRoute()
+	{
+		return new Router();
+	}
+
 	/*
 	* notre objet PDO
 	*/
@@ -36,24 +42,23 @@ Class Pagination extends Database{
 		return (int) $this->Params()->GetParam(2);
 	}
 
-
     public function getInt(string $name, ?int $default = null): ?int
-    {
-        global $router, $match;
+    {	
+        $match = $this->GetRoute()->matchRoute();
         if(!isset($_GET[$name])) return $default;
         if($_GET[$name] === '0') return 0;
 
         if(!filter_var($_GET[$name], FILTER_VALIDATE_INT)) {
             if(isset($match['params']) && $match['params'] != null){
                 if(isset($match['params']['slug']) && $match['params']['slug'] != null){
-                    header('Location:' . $router->generate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
+                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
                 }else{
-                    header('Location:' . $router->generate($match['name'], ['id' => $match['params']['id']]));
+                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['id' => $match['params']['id']]));
                 }
             }else{
-                header('Location:' . $router->generate($match['name']));
+                header('Location:' . $this->GetRoute()->routeGenerate($match['name']));
             }
-            setFlash("Le paramètre $name dans l'url n'est pas un entier",'orange');
+            $this->GetApp()->setFlash("Le paramètre $name dans l'url n'est pas un entier",'orange');
             http_response_code(301);
             exit();
         }
@@ -62,19 +67,20 @@ Class Pagination extends Database{
 
     public function getPositiveInt(string $name, ?int $default = null): ?int
     {
-        global $router,$match;
+		$match = $this->GetRoute()->matchRoute();
+
         $param = self::getInt($name, $default);
         if($param !== null && $param <= 0){
             if(isset($match['params']) && $match['params'] != null){
                 if(isset($match['params']['slug']) && $match['params']['slug'] != null){
-                    header('Location:' . $router->generate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
+                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
                 }else{
-                    header('Location:' . $router->generate($match['name'], ['id' => $match['params']['id']]));
+                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['id' => $match['params']['id']]));
                 }
             }else{
-                header('Location:' . $router->generate($match['name']));
+                header('Location:' . $this->GetRoute()->routeGenerate($match['name']));
             }
-            setFlash("Le paramètre $name dans l'url n'est pas un entier positif",'orange');
+            $this->GetApp()->setFlash("Le paramètre $name dans l'url n'est pas un entier positif",'orange');
             http_response_code(301);
             exit();
         }
@@ -92,15 +98,15 @@ Class Pagination extends Database{
 	/*
 	* return count ellements in database
 	*/
-	public function CountIdForpagination(string $statement,string $attr=null)
+	public function CountIdForpagination(string $statement,int $attr=null)
 	{
-		if($attr != null){
+		if(!is_null($attr)){
 
-			if($this->count === null){
+			if(is_null($this->count)){
 
 				$smtp = $this->Getpdo()->prepare($statement);
 	
-				$smtp->execute([intval($attr)]);
+				$smtp->execute([$attr]);
 	
 				$this->count = (int) $smtp->fetch(PDO::FETCH_NUM)[0];
 			}
@@ -109,15 +115,16 @@ Class Pagination extends Database{
 
 		}else{
 
-			if($this->count === null){
+			if(is_null($this->count)){
 				$this->count = (int) $this->Getpdo()->query($statement)->fetch(PDO::FETCH_NUM)[0];
 			}
-
+			
 			return $this->count;
 		}
 	}
 
-	public function isPage(): int{
+	public function isPage(): int
+	{
 		return ceil($this->count/$this->Params()->GetParam(2));
 	}
 
@@ -134,62 +141,38 @@ Class Pagination extends Database{
 		}
 	}
 
-
-	/*
-	* génère un lien qui pointe vers la bonne page 
-	*/
-	public function subLinkPage(string $url,int $countid)
-	{ 
-		
-		$t = ceil($countid/$this->Params()->GetParam(2));
-
-		if($t > 1){
-		  for($i=1; $i <= $t; $i++){ 
-
-				if($i == 1){
-
-					echo "<a href=".$url.">$i</a>";
-					
-				}else{
-
-					echo "<a href=".$url.'?page='. $i.">$i</a>";
-				}
- 
-			}
-		}
-
-	}
-
 	/*
 	* retourn une mini pagination 
 	*/
 	public function userLinkPage(string $url,int $id,int $countid)
 	{
 				
-		$tt = ceil($countid/$this->Params()->GetParam(2));
+		$t = (int) ceil($countid/$this->Params()->GetParam(2));
 
-		if($this->Params()->GetParam(2) >= $tt){
-			if($tt == 1){
+		if($this->Params()->GetParam(2) >= $t){
+			if($t == 1){
 			  $linkRedirectPage =  $url.'#rep-' . $id;
 			}else{
-			  $linkRedirectPage =   $url.'?page='.$tt.'#rep-' . $id;
+			  $linkRedirectPage =   $url.'?page='.$t.'#rep-' . $id;
 			}
 		}
 		return $linkRedirectPage;
 
 	}
 
-
 	public function offset(): int 
 	{
-
 		return $this->Params()->GetParam(2) * ($this->CurrentPage() - 1);
+	}
 
+	public function setOfset()
+	{
+		return ' '. intval($this->Params()->GetParam(2)) .' OFFSET '. intval($this->offset());
 	}
 
 	public function Prev(string $url) 
 	{
-		if($this->isPage() >= 1):
+		if($this->isPage() >= 2):
 			if ($this->CurrentPage() > 1) {
 				$link = $url;
 				if ($this->CurrentPage() > 2) {
@@ -204,7 +187,7 @@ Class Pagination extends Database{
 
 	public function Next(string $url) 
 	{
-		if($this->isPage() >= 1):
+		if($this->isPage() >= 2):
 			if ($this->CurrentPage() < $this->isPage()) {
 
 				$curentplus = "?page=" . ($this->CurrentPage()+1);
@@ -216,33 +199,65 @@ Class Pagination extends Database{
 		endif;
 	}
 
+	/*
+	* génère un lien qui pointe vers la bonne page 
+	* javascript si les liens généré sont superieur a 10 alors faire une fonction pour coullissé les nombre avec les flèche
+	*/
+	public function tinyLinkPage(string $url,int $countid)
+	{ 
+		
+		$t = (int) ceil($countid/$this->Params()->GetParam(2));
+		if($t > 1){
+			echo '<div class="uri">';
+				echo '<span id="urileft"><i class="fas fa-caret-left"></i></span>';
+
+					for($i=1; $i <= $t; $i++){ 
+
+						if($i == 1){
+
+							echo "<a href=".$url.">$i</a>";
+							
+						}elseif($i >= 2){
+
+							echo "<a href=".$url.'?page='. $i.">$i</a>";
+
+						}
+		
+					}
+
+				echo '<span id="uriright"><i class="fas fa-caret-right"></i></span>';
+			echo '</div>';
+		}
+
+	}
 
 	/*
 	* return pagination numbers
 	*/
 	public function pageFor(string $url)
 	{
-
-		$nb=2;
-		for($i=1; $i <= $this->isPage(); $i++){
-		  if($i <= $nb || $i > $this->isPage() - $nb ||  ($i > $this->CurrentPage()-$nb && $i < $this->CurrentPage()+$nb)){
-			if($i == $this->CurrentPage()) {
-			  echo '<li class="page-item active"><a class="page-link">'. $i .'</a></li>';
-			} elseif($i == 1) {
-			  echo '<li class="page-item"><a class="page-link" href='.$url.'>'. $i .'</a></li>' ;
-			}else{
-			  echo '<li class="page-item"><a class="page-link" href='.$url.'?page='.$i.'>'. $i .'</a></li>' ;
+		if($this->isPage() >= 2):
+			$nb=2;
+			for($i=1; $i <= $this->isPage(); $i++){
+				if($i <= $nb || $i > $this->isPage() - $nb ||  ($i > $this->CurrentPage()-$nb && $i < $this->CurrentPage()+$nb)){
+					if($i == $this->CurrentPage()) {
+						echo '<li class="page-item active"><a class="page-link">'. $i .'</a></li>';
+					} elseif($i == 1) {
+						echo '<li class="page-item"><a class="page-link" href='.$url.'>'. $i .'</a></li>' ;
+					}else{
+						echo '<li class="page-item"><a class="page-link" href='.$url.'?page='.$i.'>'. $i .'</a></li>' ;
+					}
+				}else{
+					if($i > $nb && $i < $this->CurrentPage()-$nb){
+						$i = $this->CurrentPage() - $nb;
+					}elseif($i >= $this->CurrentPage() + $nb && $i < $this->isPage()-$nb){
+						$i = $this->isPage() - $nb;
+					}
+					$it = ($i-1);
+					echo "<li class='page-item'><a class='page-link' href='$url'?page='$it'>...</a></li>";
+				}
 			}
-		  }else{
-			if($i > $nb && $i < $this->CurrentPage()-$nb){
-			  $i = $this->CurrentPage() - $nb;
-			}elseif($i >= $this->CurrentPage() + $nb && $i < $this->isPage()-$nb){
-			  $i = $this->isPage() - $nb;
-			}
-			$it = ($i-1);
-			echo "<li class='page-item'><a class='page-link' href='$url'?page='$it'>...</a></li>";
-		  }
-		}
+		endif;
 	
 	}
 
