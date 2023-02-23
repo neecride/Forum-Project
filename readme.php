@@ -13,9 +13,9 @@ $pagination->isExistPage($router->generate($match['name'], ['id' => $params['id'
 
 <nav>
 <ul class="pagination mb-3 mt-3 pagination-sm">
-<?= $pagination->Prev($router->generate('forum')) ?>
-<?= $pagination->pageFor($router->generate('forum')) ?>
-<?= $pagination->Next($router->generate('forum')) ?>
+<?= $pagination->Prev($router->routeGenerate('forum')) ?>
+<?= $pagination->pageFor($router->routeGenerate('forum')) ?>
+<?= $pagination->Next($router->routeGenerate('forum')) ?>
 </ul>
 </nav>
 
@@ -28,5 +28,5 @@ affiche une mini pagination avec une boucle for a coté du titre par exemple
 le lien est généré avec le nombre de topic en bdd et le lien vers la page 
 si $i == 1 on afficche le lien sans page sinon on affiche la page 1/2/3 etc..
 <div class="uri">
-<?= $pagination->subLinkPage($router->generate('viewtopic',['id' => $posts->topicid]),$count->countid) ?>
+<?= $pagination->subLinkPage($router->routeGenerate('viewtopic',['id' => $posts->topicid]),$count->countid) ?>
 </div>
