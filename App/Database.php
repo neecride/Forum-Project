@@ -29,17 +29,16 @@ class Database{
 	{
 		if($this->pdo === null){	
 			try{
-				$pdo = new PDO("mysql:dbname={$this->dbname};host={$this->dbhost}",$this->dbuser,$this->dbpass,array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8')); 
-				$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);//ou FETCH_ASSOC
-				$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); //exception or WARNING
+				$pdo = new PDO("mysql:dbname={$this->dbname};host={$this->dbhost}",$this->dbuser,$this->dbpass,array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4')); 
+				$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
+				$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 				$this->pdo = $pdo;
 			}catch(\Exception $e){
 				/* echo $e->getMessage(); */
-				die('Imopsible de ce connecter a la BDD');    
+				die('Imopsible de ce connecter a la BDD');
 			}
 		}
 		return $this->pdo;
-
 	}
 
 	//si besoin on a notre objet pdo
@@ -48,9 +47,8 @@ class Database{
 		return $this->Getpdo();
 	}
 
-    public function Request($statement,$attrs=null,$one = null)
+    public function Request(string $statement,array $attrs=null,int $one=null)
 	{
-        
         if(!is_null($attrs)){
 
             $req = $this->getPDO()->prepare($statement);
@@ -58,55 +56,27 @@ class Database{
             $req->execute($attrs);
             
             if($one === 1){
-
             	//retour 1 result
          		return $req->fetch();
-
             }else{
-
             	//return all result
                 return $req->fetchAll();
-
             }
             
         }else{
             
-            //si attrs = null return query
-            return $this->getPDO()->query($statement); 
+			$req = $this->getPDO()->query($statement);
+			if($one === 1){
+				//retour 1 result
+				return $req->fetch();
+            }else{
+            	//return all result
+                return $req->fetchAll();
+            }
             
         }
         return null;
-        
     }
-
-	public function Query($statement)
-	{
-
-		return $this->Getpdo()->query($statement);
-
-	}
-
-	public function Prepare($statement,$attr,$one=null)
-	{
-
-		$req = $this->Getpdo()->prepare($statement);
-
-		$req->execute($attr);
-
-		if($one === 1){
-			return $req->fetch();
-		}else{
-			return $req->fetchAll();
-		}
-	}	
-
-	public function Insert($statement,$attr)
-	{
-
-		$req = $this->Getpdo()->prepare($statement);
-
-		$req->execute($attr);
-	}	
 
 	public function Delete($statement,$attr)
 	{
@@ -122,18 +92,6 @@ class Database{
 		$req = $this->Getpdo()->prepare($statement);
 
 		$req->execute($attr);
-	}
-
-	public function CountID($statement,$attr=null)
-	{
-
-		$req = $this->Getpdo()->prepare($statement);
-
-		$req->execute($attr);
-
-		$results = $req->rowCount();
-
-		return $results;
 	}
 
 	public function CountObj($statement,$attr)
@@ -165,7 +123,5 @@ class Database{
 	{
 		return $this->Getpdo()->lastInsertId();
 	}
-
-
 
 }
