@@ -80,7 +80,6 @@ class Database{
 
 	public function Delete($statement,$attr)
 	{
-
 		$req = $this->Getpdo()->prepare($statement);
 
 		$req->execute($attr);
