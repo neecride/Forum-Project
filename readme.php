@@ -13,14 +13,14 @@ $pagination->isExistPage($router->generate($match['name'], ['id' => $params['id'
 
 <nav>
 <ul class="pagination mb-3 mt-3 pagination-sm">
-<?= $pagination->Prev($router->routeGenerate('forum')) ?>
-<?= $pagination->pageFor($router->routeGenerate('forum')) ?>
-<?= $pagination->Next($router->routeGenerate('forum')) ?>
+<?= $pagination->Prev() ?>
+<?= $pagination->pageFor() ?>
+<?= $pagination->Next() ?>
 </ul>
 </nav>
 
 génére un lien qui renvois vers la page++ et la balise réponse #rep
-<a href="<?= $pagination->userLinkPage($router->generate('viewtopic', ['id' => $posts->topicid]), $rep->idrep,$count->countid) ?>">
+<a href="<?= $pagination->userLinkPage($posts->topicid,$rep->idrep,$count->countid) ?>">
 <?= $rep->username ?>
 </a>
 
@@ -28,5 +28,5 @@ affiche une mini pagination avec une boucle for a coté du titre par exemple
 le lien est généré avec le nombre de topic en bdd et le lien vers la page 
 si $i == 1 on afficche le lien sans page sinon on affiche la page 1/2/3 etc..
 <div class="uri">
-<?= $pagination->subLinkPage($router->routeGenerate('viewtopic',['id' => $posts->topicid]),$count->countid) ?>
+<?= $pagination->subLinkPage($posts->topicid,$count->countid) ?>
 </div>
