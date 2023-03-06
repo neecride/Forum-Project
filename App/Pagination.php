@@ -4,28 +4,25 @@ namespace App;
 
 use PDO;
 
-Class Pagination extends Database{
+Class Pagination {
 
 	private $count;
+	private App $app;
+	private Database $cnx;
+	private Router $router;
+	private Parameters $parameters;
 
-	private function Params()
+	public function __construct()
 	{
-		return new Parameters();
-	}
-
-	private function GetApp()
-	{
-		return new App();
-	}
-	
-	private function GetRoute()
-	{
-		return new Router();
+		$this->app = new App;
+		$this->cnx = new Database;
+		$this->router = new Router;
+		$this->parameters = new Parameters;
 	}
 
 	public function Perpage(): int
 	{
-		return (int) $this->Params()->GetParam(2);
+		return (int) $this->parameters->GetParam(2);
 	}
 
     
@@ -38,21 +35,21 @@ Class Pagination extends Database{
      */
     private function getInt(string $name, ?int $default = null): ?int
     {	
-        $match = $this->GetRoute()->matchRoute();
+        $match = $this->router->matchRoute();
         if(!isset($_GET[$name])) return $default;
         if($_GET[$name] === '0') return 0;
 
         if(!filter_var($_GET[$name], FILTER_VALIDATE_INT)) {
             if(isset($match['params']) && $match['params'] != null){
                 if(isset($match['params']['slug']) && $match['params']['slug'] != null){
-                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
+                    header('Location:' . $this->router->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
                 }else{
-                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['id' => $match['params']['id']]));
+                    header('Location:' . $this->router->routeGenerate($match['name'], ['id' => $match['params']['id']]));
                 }
             }else{
-                header('Location:' . $this->GetRoute()->routeGenerate($match['name']));
+                header('Location:' . $this->router->routeGenerate($match['name']));
             }
-            $this->GetApp()->setFlash("Le paramètre $name dans l'url n'est pas un entier",'orange');
+            $this->app->setFlash("Le paramètre $name dans l'url n'est pas un entier",'orange');
             http_response_code(301);
             exit();
         }
@@ -69,19 +66,19 @@ Class Pagination extends Database{
      */
     private function getPositiveInt(string $name, ?int $default = null): ?int
     {
-		$match = $this->GetRoute()->matchRoute();
+		$match = $this->router->matchRoute();
         $param = self::getInt($name, $default);
         if($param !== null && $param <= 0){
             if(isset($match['params']) && $match['params'] != null){
                 if(isset($match['params']['slug']) && $match['params']['slug'] != null){
-                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
+                    header('Location:' . $this->router->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
                 }else{
-                    header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['id' => $match['params']['id']]));
+                    header('Location:' . $this->router->routeGenerate($match['name'], ['id' => $match['params']['id']]));
                 }
             }else{
-                header('Location:' . $this->GetRoute()->routeGenerate($match['name']));
+                header('Location:' . $this->router->routeGenerate($match['name']));
             }
-            $this->GetApp()->setFlash("Le paramètre $name dans l'url n'est pas un entier positif",'orange');
+            $this->app->setFlash("Le paramètre $name dans l'url n'est pas un entier positif",'orange');
             http_response_code(301);
             exit();
         }
@@ -96,13 +93,13 @@ Class Pagination extends Database{
 	 */
 	public function isExistPage()
 	{
-		$match = $this->GetRoute()->matchRoute();
+		$match = $this->router->matchRoute();
 		if($this->CurrentPage() > $this->isPage() && $this->CurrentPage() > 1) {
-			$this->GetApp()->setflash("Ce numéro de page n'existe pas","orange");
+			$this->app->setflash("Ce numéro de page n'existe pas","orange");
 			if(isset($match['params']['slug']) && $match['params']['slug'] != null){
-				header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
+				header('Location:' . $this->router->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]));
 			}else{
-				header('Location:' . $this->GetRoute()->routeGenerate($match['name'], ['id' => $match['params']['id']]));
+				header('Location:' . $this->router->routeGenerate($match['name'], ['id' => $match['params']['id']]));
 			}
 			http_response_code(301);
 			exit();
@@ -129,7 +126,7 @@ Class Pagination extends Database{
 
 			if(is_null($this->count)){
 
-				$smtp = $this->thisPDO()->prepare($statement);
+				$smtp = $this->cnx->thisPdo()->prepare($statement);
 	
 				$smtp->execute([$attr]);
 	
@@ -141,7 +138,7 @@ Class Pagination extends Database{
 		}else{
 
 			if(is_null($this->count)){
-				$this->count = (int) $this->thisPDO()->query($statement)->fetch(PDO::FETCH_NUM)[0];
+				$this->count = (int) $this->cnx->thisPdo()->query($statement)->fetch(PDO::FETCH_NUM)[0];
 			}
 			
 			return $this->count;
@@ -150,7 +147,7 @@ Class Pagination extends Database{
 
 	public function isPage(): int
 	{
-		return ceil($this->count/$this->Params()->GetParam(2));
+		return ceil($this->count/$this->parameters->GetParam(2));
 	}
 
 	
@@ -165,12 +162,12 @@ Class Pagination extends Database{
 	public function userLinkPage(string $id,int $idrep,int $countid)
 	{
 
-		$t = (int) ceil($countid/$this->Params()->GetParam(2));
-		if($this->Params()->GetParam(2) >= $t){
+		$t = (int) ceil($countid/$this->parameters->GetParam(2));
+		if($this->parameters->GetParam(2) >= $t){
 			if($t == 1){
-			  $userLinkPage =  $this->GetRoute()->routeGenerate('viewtopic', ['id' => $id]).'#rep-' . $idrep;
+			  $userLinkPage =  $this->router->routeGenerate('viewtopic', ['id' => $id]).'#rep-' . $idrep;
 			}else{
-			  $userLinkPage =  $this->GetRoute()->routeGenerate('viewtopic', ['id' => $id]).'?page='.$t.'#rep-' . $idrep;
+			  $userLinkPage =  $this->router->routeGenerate('viewtopic', ['id' => $id]).'?page='.$t.'#rep-' . $idrep;
 			}
 		}
 		return $userLinkPage;
@@ -179,24 +176,24 @@ Class Pagination extends Database{
 
 	private function offset(): int 
 	{
-		return $this->Params()->GetParam(2) * ($this->CurrentPage() - 1);
+		return $this->parameters->GetParam(2) * ($this->CurrentPage() - 1);
 	}
 	
 	public function setOfset()
 	{
-		return ' '. intval($this->Params()->GetParam(2)) .' OFFSET '. intval($this->offset());
+		return ' '. intval($this->parameters->GetParam(2)) .' OFFSET '. intval($this->offset());
 	}
 
 	public function Prev($url) 
 	{
-		$match = $this->GetRoute()->matchRoute();
+		$match = $this->router->matchRoute();
 		if($this->isPage() >= 2):
 			if ($this->CurrentPage() > 1) {
 				$link = $url;
 				if ($this->CurrentPage() > 2) {
 					$link .= "?page=" . ($this->CurrentPage() - 1);
 				}
-				$here = $link.'#'.$match['name'];
+				$here = $link;
 				return "<li class='page-item'><a class='page-link' href='$here'><i class='fas fa-angle-double-left'></i></a></li>";
 			} else {
 				return '<li class="disabled page-item"><a class="page-link"><i class="fas fa-angle-double-left"></i></a></li>';
@@ -206,11 +203,11 @@ Class Pagination extends Database{
 
 	public function Next($url) 
 	{
-		$match = $this->GetRoute()->matchRoute();
+		$match = $this->router->matchRoute();
 		if($this->isPage() >= 2):
 			if ($this->CurrentPage() < $this->isPage()) {
 
-				$curentplus = $url."?page=" . ($this->CurrentPage()+1).'#'.$match['name'];
+				$curentplus = $url."?page=" . ($this->CurrentPage()+1);
 				return "<li class='page-item'><a class='page-link' href='$curentplus'><i class='fas fa-angle-double-right'></i></a></li>";
 
 			} else {
@@ -226,7 +223,7 @@ Class Pagination extends Database{
 	public function tinyLinkPage(int $id,int $countid)
 	{ 
 		
-		$t = (int) ceil($countid/$this->Params()->GetParam(2));
+		$t = (int) ceil($countid/$this->parameters->GetParam(2));
 		if($t > 1){
 			echo '<div class="uri">';
 				echo '<span id="urileft"><i class="fas fa-caret-left"></i></span>';
@@ -234,9 +231,9 @@ Class Pagination extends Database{
 					for($i=1; $i <= $t; $i++){ 
 
 						if($i == 1){
-							echo "<a href=".$this->GetRoute()->routeGenerate('viewtopic', ['id' => $id.'#topic-'.$id]).">$i</a>";
+							echo "<a href=".$this->router->routeGenerate('viewtopic', ['id' => $id]).">$i</a>";
 						}elseif($i >= 2){
-							echo "<a href=".$this->GetRoute()->routeGenerate('viewtopic', ['id' => $id]).'?page='.$i.'#topic-'.$id.">$i</a>";
+							echo "<a href=".$this->router->routeGenerate('viewtopic', ['id' => $id]).'?page='.$i.">$i</a>";
 						}
 		
 					}
@@ -253,14 +250,14 @@ Class Pagination extends Database{
 	public function pageFor()
 	{
 
-		$match = $this->GetRoute()->matchRoute();
+		$match = $this->router->matchRoute();
 		if($this->isPage() >= 2):
 			if(isset($match['name']) && $match['name'] == 'forum-tags'){
-				$url = $this->GetRoute()->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]);
+				$url = $this->router->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]);
 			}elseif(isset($match['name']) && $match['name'] == 'viewtopic'){
-				$url = $this->GetRoute()->routeGenerate($match['name'], ['id' => $match['params']['id']]);
+				$url = $this->router->routeGenerate($match['name'], ['id' => $match['params']['id']]);
 			}elseif(isset($match['name']) && in_array($match['name'], ['forum','survey'])){
-				$url = $this->GetRoute()->routeGenerate($match['name']);
+				$url = $this->router->routeGenerate($match['name']);
 			}
 			$nb=2;
 			echo $this->prev($url);
@@ -269,9 +266,9 @@ Class Pagination extends Database{
 					if($i == $this->CurrentPage()) {
 						echo '<li class="page-item active"><a class="page-link">'. $i .'</a></li>';
 					} elseif($i == 1) {
-						echo '<li class="page-item"><a class="page-link" href='.$url.'#'.$match['name'].'>'. $i .'</a></li>' ;
+						echo '<li class="page-item"><a class="page-link" href='.$url.'>'. $i .'</a></li>' ;
 					}else{
-						echo '<li class="page-item"><a class="page-link" href='.$url.'?page='.$i.'#'.$match['name'].'>'. $i .'</a></li>' ;
+						echo '<li class="page-item"><a class="page-link" href='.$url.'?page='.$i.'>'. $i .'</a></li>' ;
 					}
 				}else{
 					if($i > $nb && $i < $this->CurrentPage()-$nb){
@@ -279,7 +276,7 @@ Class Pagination extends Database{
 					}elseif($i >= $this->CurrentPage() + $nb && $i < $this->isPage()-$nb){
 						$i = $this->isPage() - $nb;
 					}
-					$ii = ($i-1).'#'.$match['name'];
+					$ii = ($i-1);
 					echo "<li class='page-item'><a class='page-link' href='$url'?page='$ii'>...</a></li>";
 				}
 			}
