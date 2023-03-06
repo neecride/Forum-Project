@@ -13,9 +13,7 @@ $pagination->isExistPage($router->generate($match['name'], ['id' => $params['id'
 
 <nav>
 <ul class="pagination mb-3 mt-3 pagination-sm">
-<?= $pagination->Prev() ?>
 <?= $pagination->pageFor() ?>
-<?= $pagination->Next() ?>
 </ul>
 </nav>
 
