@@ -32,32 +32,34 @@ Class AccountAction{
 	public function test(): self
 	{
 		if(isset($_POST['go'])){
-
+			
+			$this->app->methodPostValid('POST');
+			
 			$this->session->checkCsrf();
-			var_dump($_POST);
+
 			$premier = $_POST['premier'];
 			$deux = $_POST['deux'];
 			$trois = $_POST['trois'];
 		
 			$this->validator = $this->getValidator(
 				[
-					$premier,
-					$deux,
-					$trois
+					'premier' 	=> $premier,
+					'deux' 		=> $deux,
+					'trois' 	=> $trois
 				]
 				)
-				->required($premier,$deux,$trois)
-				->isDifferent($deux,$trois)
-				->validName($premier)
-				->validName($trois);
+				->required('premier','deux','trois')
+				->isDifferent('deux',$trois)
+				->validName('premier')
+				->validName('trois');
 			
 			if($this->validator->isValid())
 			{
-				var_dump($this->validator);
-				var_dump('ça fonctionne pas erreur');
+				$this->app->setFlash("Le formulaire a bien été envoyer");
+				$this->app->redirect($this->router->routeGenerate('account-edit'));
 			}
 			$this->errors = $this->validator->getErrors();
-			var_dump($this->errors);
+			var_dump($this->validator);
 		}
 		return $this;
 	}
