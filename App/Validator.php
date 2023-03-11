@@ -2,247 +2,173 @@
 
 namespace App;
 
+use DateTime;
+
 class Validator{
 	
+	/**
+	 * errors
+	 *
+	 * @var array
+	 */
+	private $errors = [];
 	
-	//instance de la class parameters 
-	private function Params(){
-		return new Parameters();
+	/**
+	 * params
+	 *
+	 * @var array
+	 */
+	private $params;
+	private App $app;
+	private Router $router;
+	private Parameters $parameters;
+
+	public function __construct(array $params)
+	{
+		$this->app = new App;
+		$this->params = $params;
+		$this->router = new Router;
+		$this->parameters = new Parameters;
 	}
-
-	private function GetApp(){
-		return new App();
-	}
-
-	public function GetErrors($errors){
-		foreach ($errors as $value) {
-
-			return '<li>'.$value.'</li>';
-
-		}
-	}	
-
-	/*
-	* validation username str
-	*/
-	public function ValidUsername($flied){
-
-		if((grapheme_strlen($flied) < 3) || (grapheme_strlen($flied) > 15)){
-            $error = $this->GetErrors(['Le username doit contenir entre 4 et 15 caractères max']);
-        }
-
-        if(empty($field) || !preg_match('/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,15}$/', $field)){
-            $error = $this->GetErrors(["le mot de passe doit être composé de 8 a 15 caractères, de minuscules, une majuscule de chiffres et d’au moins un caractère spécial"]);
-        }
-
-	}
-
-	/*
-	* verif password diférent
-	*/	
-	public function PassDiff($field,$passconfirm){
-
-		if($field != $passconfirm){
-
-	         $error = $this->GetErrors(["Vos mots de pass sont différent"]);
-
-	     }
-
-	}
-
-	/*
-	* validation input str
-	*/
-	public function ValidInput($flied,$infstr,$suppstr){
-
-		if((strlen($flied) < $infstr) || (strlen($flied) > $suppstr)){
-            $error = $this->GetErrors(['Le champ doit contenir au moins 4 min et 30 max caractères']);
-        }
-
-	}
-
-	/*
-	* si un email est valide
-	*/
-	public function VailidEmail($field){
-		if(empty(filter_var($field, FILTER_VALIDATE_EMAIL)) || !filter_var($field, FILTER_VALIDATE_EMAIL)){
-            $error = ["Votre email n'est pas valide"];
-        }
-	}
-
-	/*
-	* vérifie si un contenue est supperieur a str
-	*/
-	public function SuppContent($field,$limit,$page,$message){
-		if((strlen($field) > $limit)){
-			
-			$this->GetApp()->setFlash($message,'orange');
-            $this->GetApp()->redirect($page); 
-            
-        }
-	}	
-
-	/*
-	* vérifie si un contenue est inferieur a str
-	*/
-	public function InfContent($field,$limit,$page,$message){
-		if((strlen($field) < $limit)){
-			
-			$this->GetApp()->setFlash($message,'orange');
-            $this->GetApp()->redirect($page); 
-            
-        }
-	}
-
-	//si la session n'est pas définie
-	public function ValidSession($page,$message){
-        if(!isset($_SESSION['auth'])){
-        	$this->GetApp()->setFlash($message,'orange');
-            $this->GetApp()->redirect($page); 
-        }
-	}
-
-
-	/*********
-	*si on est déjà connecter
-	********/
-	public function IsLogged($page,$message){
-	    
-	    if(!empty($_SESSION['auth'])){
-
-	        $this->GetApp()->setFlash($message,'orange');
-	        $this->GetApp()->redirect($page);
-
-	    } 
-	    
-	}
-
-	/******
-	* function admin or not
-	********/
-	public function isAdmin(){
-	    
-	    if(empty($_SESSION["auth"]->authorization) || !empty($_SESSION["auth"]->authorization != 4)){//verification du rang admin
-		
-	        $this->GetApp()->setFlash('<strong>Oh oh!</strong> vous n\'avez pas acces a cette page <strong> réserver au admin </strong>','orange');
-	        $this->GetApp()->redirect('home');
-	    
-	    } 
-	}
-
-	private function CaptchaInit(){
-
-		if(!empty($this->Params()->GetParam(6))){   
-    		return new \ReCaptcha\ReCaptcha($this->Params()->GetParam(6));
-		}
-
-	}	
-
-	public function ValidCaptcha($page){
-
-		$recaptcha = $this->CaptchaInit();
-
-        if(!empty($this->Params()->GetParam(7))){
-
-            $resp = $recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['SERVER_ADDR']);
-
-            if(!$resp->isSuccess()){
-
-            	sleep(1);
-
-                $this->GetApp()->setFlash('<strong>Oh oh!</strong> Formulaire incorect !<strong> captcha invalide </strong>','orange');
-                $this->GetApp()->redirect($page); 
-
-            }
-
-        }else{
-
-            if(!empty($_POST['captcha'] != $_SESSION['captcha'])){
-
-            	sleep(1);
-            	
-                $this->GetApp()->setFlash('<strong>Oh oh!</strong> Formulaire incorect !<strong> captcha invalide : captcha différent </strong>','orange');
-                $this->GetApp()->redirect($page); 
-
-            }if(empty($_POST['captcha'])){
-
-            	sleep(1);
-            	
-                $this->GetApp()->setFlash('<strong>Oh oh!</strong> Formulaire incorect !<strong> captcha invalide : ne dois pas être vide </strong>','orange');
-                $this->GetApp()->redirect($page); 
-
-            }
-
-
-        }
-
-	}
-
-	/***********
-	* authorization admin or modo ...
-	************/
-	public function GetRoles($role){
-
-		if(isset($_SESSION["auth"])){
-			return in_array($_SESSION["auth"]->authorization , $role);
-		}
-		return false;
-	}
-
-	/*
-	* check role user
-	* $page string 
-	* $message string
-	* $role array
-	*/
-	public function ValidRole($page,$message,$role){
-
-		if(isset($_SESSION["auth"]->authorization) && !empty($_SESSION["auth"]->authorization != $this->GetRoles($role) ) ){
-
-			$this->GetApp()->setFlash($message,'orange');
-            $this->GetApp()->redirect($page); 
-
-		}
-
-	}	
-
-	// a tester en profondeur - le but et de vérifier si le parametre est desactiver mais si l'utilisateur est admin ou modo il peut passer
-	public function ValidParam($id,$param_activ,$page,$message){
-
-		if(isset($_SESSION["auth"]->authorization) && !empty($_SESSION["auth"]->authorization != $this->GetRoles([4,3]) ) ){
-			
-			if($this->Params()->GetParam($id,'param_activ') == $param_activ){
-
-				$this->GetApp()->setFlash($message,'orange');
-	            $this->GetApp()->redirect($page); 
-
+	
+	/**
+	 * required vérifie que les champ sont présent dans le tableau
+	 *
+	 * @param  mixed $keys
+	 * @return self
+	 */
+	public function required(string ...$keys): self
+	{	
+		foreach($keys as $key){
+			if(is_null($key) || empty($key)){
+				$this->addError($key, 'required');
 			}
-
 		}
+	
+		return $this;
 	}
 
-	/******
-	*token
-	******/
-	public function StrRandom($length){
-	    
-	    $alphabet = "0123456789azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN";
-	    
-	    return substr(str_shuffle(str_repeat($alphabet, $length)), 0,$length);
-	    
+	/*
+	* si on a une traduction 
+	* return error $this->addError($key, 'slug');
+	*/
+	/**
+	 * isDiffent on vérifie si les valeurs sont différente
+	 *
+	 * @param  mixed $key
+	 * @param  mixed $value
+	 * @return self
+	 */
+	public function isDifferent(string $key, string $value): self 
+	{	
+		if($key !== $value){
+			$this->addError($key, 'isDifferent');
+		}
+		return $this;
+	} 
+
+	public function fileExist(string $key): self
+	{
+		if(!file_exists('inc/img/avatars/' . $key)){
+			$this->addError($key, 'fileExist');
+		}
+		return $this;
 	}
 
-	/*************
-	* trucast long titre
-	*************/
-	public function trunque($str, $nb = '') {
-		if (strlen($str) > $nb) {
-			$str = substr($str, 0, $nb);
-			$position_espace = strrpos($str, " ");
-			$texte = substr($str, 0, $position_espace); 
-			$str = $str."...";
+		
+	/**
+	 * validName check si le username est bien valid
+	 *
+	 * @param  mixed $key
+	 * @return self
+	 */
+	public function validName(string $key): self
+	{
+		if(!preg_match('/^[a-zA-Z0-9ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåæçèéêëìíîïñòóôõöøùúûüý_-]{3,20}$/', $key)){
+			$this->addError($key, 'validName');
 		}
-		return $str;
+        return $this;
+	}
+
+	public function validTtitle(string $key): self
+	{
+		if(!preg_match('/^[a-zA-Z0-9ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåæçèéêëìíîïñòóôõöøùúûüý\-\'\!?\s]{5,50}$/',$key)){
+			$this->addError($key, 'validTitle');
+		}
+		return $this;
+	}
+
+	public function validEmail(string $key): self
+	{
+		if(!filter_var($key, FILTER_VALIDATE_EMAIL)){
+			$this->addError($key, 'validEmail');
+		}
+		return $this;
+	}
+
+	public function validMdp(string $key): self
+	{
+		
+		if(!preg_match('/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,50}$/', $key)) {
+			$this->addError($key, 'validMdp');
+		}
+		return $this;
+	}
+
+		
+	/**
+	 * notEmpty vérifie que le champ n'est pas vide
+	 *
+	 * @param  mixed $keys
+	 * @return self
+	 */
+	public function notEmpty(string ...$keys): self
+	{
+		foreach($keys as $key){
+			if(is_null($key) || empty($key)){
+				$this->addError($key, 'notEmpty');
+			}
+		}
+		return $this;
+	}
+
+	public function isValid(): bool
+	{
+		return empty($this->errors);
+	}
+
+	public function dateTime(string $key, string $format = "Y-m-d H:i:s"): self
+	{
+		$value = $this->getValue($key);
+		$date = DateTime::createFromFormat($format, $value);
+		$errors = DateTime::getLastErrors();
+		if($errors['error_count'] > 0 || $errors['warning_count'] > 0 || $date === null){
+			$this->addError($key, 'dateTime');
+		}
+		return $this;
+	}
+		
+	/**
+	 * getErrors recupère les erreurs
+	 *
+	 * @return array
+	 */
+	public function getErrors(): array
+	{
+		return $this->errors;
+	}
+
+	private function getValue(string $key)
+	{
+		if(array_key_exists($key, $this->params)){
+			return $this->params[$key];
+		}
+		return null;
+	}
+
+	private function addError(string $key, string $rule, $attributes = []): void
+	{
+		$this->errors[$key] = new ValidationError($key, $rule);
 	}
 
 } 
