@@ -40,7 +40,8 @@ class Validator{
 	public function required(string ...$keys): self
 	{	
 		foreach($keys as $key){
-			if(is_null($key) || empty($key)){
+			$value 	=  (string) $this->getValue($key);
+			if(is_null($value) || empty($value)){
 				$this->addError($key, 'required');
 			}
 		}
@@ -59,9 +60,10 @@ class Validator{
 	 * @param  mixed $value
 	 * @return self
 	 */
-	public function isDifferent(string $key, string $value): self 
+	public function isDifferent(string $key, string $field): self 
 	{	
-		if($key !== $value){
+		$value 	=  (string) $this->getValue($key);
+		if($value !== $field){
 			$this->addError($key, 'isDifferent');
 		}
 		return $this;
@@ -69,7 +71,8 @@ class Validator{
 
 	public function fileExist(string $key): self
 	{
-		if(!file_exists('inc/img/avatars/' . $key)){
+		$value 	=  (string) $this->getValue($key);
+		if(!file_exists('inc/img/avatars/' . $value)){
 			$this->addError($key, 'fileExist');
 		}
 		return $this;
@@ -84,7 +87,9 @@ class Validator{
 	 */
 	public function validName(string $key): self
 	{
-		if(!preg_match('/^[a-zA-Z0-9ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåæçèéêëìíîïñòóôõöøùúûüý_-]{3,20}$/', $key)){
+		$value 	=  (string) $this->getValue($key);
+		var_dump($value);
+		if(!preg_match('/^[a-zA-Z0-9ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåæçèéêëìíîïñòóôõöøùúûüý_-]{3,20}$/', $value)){
 			$this->addError($key, 'validName');
 		}
         return $this;
@@ -92,7 +97,8 @@ class Validator{
 
 	public function validTtitle(string $key): self
 	{
-		if(!preg_match('/^[a-zA-Z0-9ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåæçèéêëìíîïñòóôõöøùúûüý\-\'\!?\s]{5,50}$/',$key)){
+		$value 	=  (string) $this->getValue($key);
+		if(!preg_match('/^[a-zA-Z0-9ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝàáâãäåæçèéêëìíîïñòóôõöøùúûüý\-\'\!?\s]{5,50}$/',$value)){
 			$this->addError($key, 'validTitle');
 		}
 		return $this;
@@ -100,7 +106,8 @@ class Validator{
 
 	public function validEmail(string $key): self
 	{
-		if(!filter_var($key, FILTER_VALIDATE_EMAIL)){
+		$value 	=  (string) $this->getValue($key);
+		if(!filter_var($value, FILTER_VALIDATE_EMAIL)){
 			$this->addError($key, 'validEmail');
 		}
 		return $this;
@@ -108,10 +115,45 @@ class Validator{
 
 	public function validMdp(string $key): self
 	{
-		
-		if(!preg_match('/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,50}$/', $key)) {
+		$value 	=  (string) $this->getValue($key);
+		if(!preg_match('/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,50}$/', $value)) {
 			$this->addError($key, 'validMdp');
 		}
+		return $this;
+	}
+
+
+	public function length(string $key, ?int $min, ?int $max = null): self
+	{
+		$value 	=  (string) $this->getValue($key);
+		$length = grapheme_strlen($value);
+			if
+			(
+				!is_null($min) &&
+				!is_null($max) &&
+				($length < $min || $length > $max)
+			)
+			{
+				$this->addError($key, 'betweenLength', [$min, $max]);
+				return $this;
+			}
+			if
+			(
+				!is_null($min) &&
+				($length < $min)
+			)
+			{
+				$this->addError($key, 'minLength', [$min]);
+				return $this;
+			}
+			if
+			(
+				!is_null($max) &&
+				($length > $max)
+			)
+			{
+				$this->addError($key, 'maxLength', [$max]);
+			}
 		return $this;
 	}
 
@@ -125,7 +167,8 @@ class Validator{
 	public function notEmpty(string ...$keys): self
 	{
 		foreach($keys as $key){
-			if(is_null($key) || empty($key)){
+			$value 	=  (string) $this->getValue($key);
+			if(is_null($value) || empty($value)){
 				$this->addError($key, 'notEmpty');
 			}
 		}
@@ -136,10 +179,17 @@ class Validator{
 	{
 		return empty($this->errors);
 	}
-
+	
+	/**
+	 * dateTime
+	 *
+	 * @param  mixed $key
+	 * @param  mixed $format
+	 * @return self
+	 */
 	public function dateTime(string $key, string $format = "Y-m-d H:i:s"): self
 	{
-		$value = $this->getValue($key);
+		$value = (string) $this->getValue($key);
 		$date = DateTime::createFromFormat($format, $value);
 		$errors = DateTime::getLastErrors();
 		if($errors['error_count'] > 0 || $errors['warning_count'] > 0 || $date === null){
@@ -151,13 +201,20 @@ class Validator{
 	/**
 	 * getErrors recupère les erreurs
 	 *
-	 * @return array
+	 * @return ValidationError[]
 	 */
 	public function getErrors(): array
 	{
 		return $this->errors;
 	}
 
+		
+	/**
+	 * getValue
+	 *
+	 * @param  mixed $key
+	 * @return void
+	 */
 	private function getValue(string $key)
 	{
 		if(array_key_exists($key, $this->params)){
@@ -165,7 +222,15 @@ class Validator{
 		}
 		return null;
 	}
-
+	
+	/**
+	 * addError ajoute une erreur
+	 *
+	 * @param  mixed $key
+	 * @param  mixed $rule
+	 * @param  mixed $attributes
+	 * @return void
+	 */
 	private function addError(string $key, string $rule, $attributes = []): void
 	{
 		$this->errors[$key] = new ValidationError($key, $rule);
