@@ -16,7 +16,7 @@ class ValidationError {
         'betweenLength'     => "Le champ %s doit contenir entre %d et %d caractères",
         'dateTime'          => "Le champ %s doit être une date valide (%s)",
         'fileExist'         => "Le fichier %s n'existe pas",
-        'validName'         => "Le %s ne doit contenir 3|20 caractères alphanuméric (accent compris) tirets (-) et underscores (_) pas d'espaces.",
+        'validName'         => "Le champ %s doit contenir 3|20 caractères alphanuméric (accent compris) tirets (-) et underscores (_) pas d'espaces.",
         'isDifferent'       => "Les champ %s sont différent",
         'validMdp'          => "Le champ %s doit être composé de 8|50 caractères, de minuscules, une majuscule de chiffres et d’au moins un caractère spécial",
         'validEmail'        => "Le champ %s n'est pas un email valide",
