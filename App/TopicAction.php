@@ -10,14 +10,19 @@ Class TopicAction{
 	private Router $router;
 	private Session $session;
 	private Parameters $parameters;
+	private Pagination $pagination;
+	private $id;
+	
 
-	public function __construct()
+	public function __construct($id)
 	{
+		$this->id = $id;
 		$this->app = new App;
 		$this->cnx = new Database;
 		$this->router = new Router;
 		$this->session = new Session;
 		$this->parameters = new Parameters;
+		$this->pagination = new Pagination;
 	}
 
 	public function checkError()
@@ -25,6 +30,69 @@ Class TopicAction{
 		if(!is_null($this->errors)){
 			return "<div class=\"notify notify-rouge\"><div class=\"notify-box-content\"><li class=\"errmode\">". implode("</li><li class=\"errmode\">",$this->errors) ."</li></div></div>";
 		}
+	}
+
+	
+	public function firstTopic()
+	{
+		return $this->cnx->Request("SELECT
+
+		f_topics.id AS topicsid,
+		f_topics.f_topic_content,
+		f_topics.f_topic_name,
+		f_topics.f_user_id,
+		f_topics.f_topic_date,
+		f_topics.f_topic_vu,
+		f_topics.topic_lock,
+		f_topics.f_topic_message_date,
+		f_topics.sticky,
+			users.id AS usersid,
+			users.username,
+			users.description,
+			users.authorization,
+			users.avatar,
+			users.email,
+			users.slug,
+			users.userurl
+
+		FROM f_topics
+
+		LEFT JOIN users ON users.id = f_topics.f_user_id
+
+		WHERE f_topics.id = ?
+
+		",[intval($this->id)],1);
+	}
+
+	public function viewTopicRep()
+	{
+		return $this->cnx->Request("SELECT
+
+			f_topics_reponse.id AS topicsrep,
+			f_topics_reponse.f_topic_reponse,
+			f_topics_reponse.f_topic_id,
+			f_topics_reponse.id AS repid,
+			f_topics_reponse.f_user_id,
+			f_topics_reponse.f_topic_rep_date AS rep_date,
+			users.id AS usersrep,
+			users.username,
+			users.description,
+			users.authorization,
+			users.avatar,
+			users.email,
+			users.slug,
+			users.userurl
+
+		FROM f_topics_reponse
+
+		LEFT JOIN users ON users.id = f_topics_reponse.f_user_id
+
+		WHERE f_topics_reponse.f_topic_id = ?
+
+		GROUP BY f_topics_reponse.id
+
+		ORDER BY f_topic_rep_date ASC LIMIT {$this->pagination->setOfset()}",[intval($this->id)]);
+
 	}
 
     public function Responses($page):self
@@ -138,7 +206,7 @@ Class TopicAction{
 		return $this;
 	}
 
-	public function viewNotView($date,$date2): self
+	public function viewNotView(): self
 	{
 		if(isset($_SESSION['auth']) && isset($this->router->matchRoute()['params']['id'])){
 
@@ -147,7 +215,7 @@ Class TopicAction{
 		
 			$views = $this->cnx->Request('SELECT * FROM f_topic_track WHERE user_id = ? AND topic_id = ?',[$userid,$get],1);
 			if($views != null){ 
-				if($date >= $views->read_topic or $date2 >= $views->read_topic){
+				if($this->firstTopic()->f_topic_message_date >= $views->read_topic or $this->firstTopic()->f_topic_date >= $views->read_topic){
 					$this->cnx->Request("UPDATE f_topic_track SET read_topic = NOW() WHERE user_id = ? AND topic_id = ?",[$userid,$get]);
 				}
 			}else{
@@ -162,6 +230,16 @@ Class TopicAction{
 		if(isset($_SESSION['auth']) && isset($this->router->matchRoute()['params']['id'])){
 			$vu = [intval($this->router->matchRoute()['params']['id'])];
 			$this->cnx->Request("UPDATE f_topics SET f_topic_vu = f_topic_vu + 1 WHERE id = ?",$vu); 
+		}
+		return $this;
+	}
+
+	public function getTopicExist(): self
+	{
+		$match = $this->router->matchRoute();
+		if($this->firstTopic($match['params']['id']) == null){
+			$this->app->setFlash("Il n'y a pas de topic avec cette id",'orange');
+			redirect($this->router->routeGenerate('forum'));
 		}
 		return $this;
 	}
