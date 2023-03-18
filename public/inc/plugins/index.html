@@ -1,0 +1,11 @@
+<Directory config>
+  ; Ne pas donne accès
+  Order Deny, Allow
+  Deny from All
+ 
+  ; Ne pas lister les fichiers
+  Options -Indexes
+ 
+  ; Ne pas écraser ces deux règles
+  AllowOverride None
+</Directory>
