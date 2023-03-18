@@ -1,1 +1,0 @@
-.jpg or .png for dynamique header
