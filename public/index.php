@@ -1,79 +1,63 @@
 <?php
-if(session_status() === PHP_SESSION_NONE){ //on verifie si les session ne sont pas déjà démmarer
-    session_start(); //et on demarre les sessions
+if(session_status() === PHP_SESSION_NONE)
+{
+    session_start();
 }
-session_regenerate_id(); //Remplace l'identifiant de session courant par un nouveau
-//phpinfo();
-//on inclu les diferente librairie fonction etc...
-define('DS', DIRECTORY_SEPARATOR);
-define('RACINE', dirname(__DIR__));
-require RACINE.DS.'vendor'.DS.'autoload.php';
-$GetParams = new App\Parameters;
-use Ausi\SlugGenerator\SlugGenerator;
-$generator = new SlugGenerator;
-$router = new App\Router();
-$Parsing = new App\Parsing;
-$pagination = new App\Pagination;
-$forum = new App\Forum;
-$themeForLayout = $GetParams->themeForLayout($GetParams->GetParam(3));
+session_regenerate_id();
+
+define            ('DS', DIRECTORY_SEPARATOR);
+define            ('RACINE', dirname(__DIR__));
+require           RACINE.DS.'vendor'.DS.'autoload.php';
+$generator        = new Ausi\SlugGenerator\SlugGenerator;
+$App              = new App\App;
+$forum            = new App\Forum;
+$router           = new Framework\Router;
+$Parsing          = new App\Parsing;
+$pagination       = new App\Pagination;
+$GetParams        = new App\Parameters;
+$index            = new App\Renderer;
 
 require_once (RACINE.DS.'lib'.DS.'libs-includes.php');
 
-if(isset($_GET['page']) && $_GET['page'] === '1'){
+$index->isNotExistPage();
 
-  $uri = explode('?',$_SERVER['REQUEST_URI'])[0];
-  $get = $_GET;
-  unset($get['page']);
-  $query = http_build_query($get);
-  if(!empty($query)){
-    $uri = $uri . '?' . $query;
-  }
-  header('Location:' . $uri);
-  http_response_code(301);
-  exit();
-}
+//$index->Render($db);
 
 if(is_array($router->matchRoute())){
-  
-    $match = $router->matchRoute();
-    $getUri = explode('/', $_SERVER['REQUEST_URI']);
 
-    ob_start();
-    //logique
-    if($getUri[1] == 'admin'){
-      is_admin();
-    }
-    require_once RACINE.DS.'lib'.DS.'modules'.DS.$match['target'].'.func.php';
+        $themeForLayout   = $GetParams->themeForLayout();
+        $match            = $router->matchRoute();
 
-    //si un fichier de personalisation existe on l'inclu sinon on inclu le fichier par defaut
-    if(file_exists(RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$match['target'].'.php')){
-      
-      require_once RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$match['target'].'.php';
+        $getUri = explode('/', $_SERVER['REQUEST_URI']);
 
-    }else{
-      
-      require_once RACINE.DS.'public'.DS.'parts'.DS.$match['target'].'.php';
+        ob_start();
+        if($getUri[1] == 'admin'){
+            $App->isAdmin();
+        }
 
-    }
-
-    $contentForLayout = ob_get_clean();
-
-    //si un fichier de personalisation existe on l'inclu sinon on inclu le fichier par defaut
-    if(file_exists(RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$themeForLayout.'.php')){
-      
-      require_once RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$themeForLayout.'.php';
-
-    }else{
-
-      require_once RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.'.php';
-
-    }
-  
+        $fileLogic = RACINE.DS.'lib'.DS.'modules'.DS.$match['target'].'.func.php';
+        //si le fichier existe on l'inclu on supprimera cette condition dans le futur
+        if(preg_match("#\.(php)$#",strtolower($fileLogic)) && file_exists($fileLogic) && is_file($fileLogic)){
+            require_once $fileLogic;
+        }
+        $filesTargetCheck = RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$match['target'].'.php';
+        //si un fichier de personalisation exist on l'inclu sinon on inclu le fichier par defaut
+        if(preg_match("#\.(php)$#",strtolower($filesTargetCheck)) && file_exists($filesTargetCheck) && is_file($filesTargetCheck)){
+            require_once $filesTargetCheck;
+        }else{
+            require_once RACINE.DS.'public'.DS.'parts'.DS.$match['target'].'.php';
+        }
+        $contentForLayout = ob_get_clean();
+        $fileThemeCheck = RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.DS.$themeForLayout.'.php';
+        //si un fichier de personalisation theme exist on l'inclu sinon on inclu le fichier par defaut
+        if(preg_match("#\.(php)$#",strtolower($fileThemeCheck)) && file_exists($fileThemeCheck) && is_file($fileThemeCheck)){
+            require_once $fileThemeCheck;
+        }else{
+            require_once RACINE.DS.'public'.DS.'templates'.DS.$themeForLayout.'.php';
+        }
 
 }else{
-
-  setFlash('<strong>Ho ho !</strong> cette page n\'éxiste pas redirection sur la page d\'erreur','orange');
-  http_response_code(404);
-  redirect($router->routeGenerate('error'));
-
+    $App->setFlash('Cette page n\'éxiste pas redirection sur la page d\'erreur','orange');
+    http_response_code(404);
+    $App->redirect($router->routeGenerate('error'));
 }
