@@ -230,7 +230,7 @@ Class TopicAction{
 			$get = (int) $this->router->matchRoute()['params']['id'];
 
 			$views = $this->cnx->Request('SELECT * FROM f_topic_track WHERE user_id = ? AND topic_id = ?',[$userid,$get],1);
-			if(!is_null($views)){
+			if($views != null){
 				if($this->firstTopic()->f_topic_message_date >= $views->read_topic or $this->firstTopic()->f_topic_date >= $views->read_topic){
 					$this->cnx->Request("UPDATE f_topic_track SET read_topic = NOW() WHERE user_id = ? AND topic_id = ?",[$userid,$get]);
 				}
