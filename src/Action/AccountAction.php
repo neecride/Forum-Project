@@ -80,24 +80,17 @@ Class AccountAction{
 		if(isset($_POST['edit-email'])){
 
 			$this->app->methodPostValid('POST');
-
 			$this->session->checkCsrf();
-
 			$profil_id = (int) $_SESSION['auth']->id;
-
 			$email = trim(filter_var($_POST['email'], FILTER_SANITIZE_EMAIL));
-
 			$email_confirm = trim(filter_var($_POST['emailConfirm'], FILTER_SANITIZE_EMAIL));
-
 			$exist = $this->cnx->request('SELECT email FROM users WHERE email = ?',[$email],1);
-
 			$this->validator
 				->notEmpty($email,$email_confirm)
 				->isDifferent($email,$email_confirm)
 				->validEmail($email_confirm)
 				->validEmail($email)
 				->isReqExist($exist);
-
 			if($this->validator->isValid()){
 				$this->cnx->Update("UPDATE users SET email = ? WHERE id = ?",[$email, $profil_id]);
 				$this->app->setFlash('Votre email a bien étais modifier');
