@@ -51,14 +51,20 @@ class AdminAction {
     {
         return $this->cnx->Request("SELECT * FROM parameters");
     }
-
+    
+    /**
+     * slogan modifie le slogan du site
+     *
+     * @return self
+     */
     public function slogan(): self
     {
-        if(isset($_POST['btnSlogan'])){
+        if(isset($_POST['btnSlogan']))
+        {
             $this->app->methodPostValid('POST');
             $this->session->checkCsrf();
             $name = strip_tags(trim($_POST['slogan']));
-            $edit = $this->parameters->GetParam(0,'param_id');
+            $edit = (int) trim(filter_var($this->parameters->GetParam(0,'param_id'),FILTER_SANITIZE_NUMBER_INT));
             $this->validator->validTtitle($name);
             if($this->validator->isValid())
             {
@@ -71,16 +77,21 @@ class AdminAction {
         }
         return $this;
     }
-
+    
+    /**
+     * siteName modifie le nom du site
+     *
+     * @return self
+     */
     public function siteName(): self
     {
-        if(isset($_POST['btnNameSite'])){
+        if(isset($_POST['btnNameSite']))
+        {
             $this->app->methodPostValid('POST');
             $this->session->checkCsrf();
             $name = strip_tags(trim($_POST['sitename']));
-            $edit = $this->parameters->GetParam(1,'param_id');
+            $edit = (int) trim(filter_var($this->parameters->GetParam(1,'param_id'),FILTER_SANITIZE_NUMBER_INT));
             $this->validator->validTtitle($name);
-
             if($this->validator->isValid())
             {
                 $u = [$name, $edit];
@@ -93,16 +104,21 @@ class AdminAction {
         return $this;
     }
 
-
+    
+    /**
+     * paginationPerPage modifie le nombre de page pour la pagination
+     *
+     * @return self
+     */
     public function paginationPerPage(): self
     {
-        if(isset($_POST['btnTopicPerPage'])){
+        if(isset($_POST['btnTopicPerPage']))
+        {
             $this->app->methodPostValid('POST');
             $this->session->checkCsrf();
-            (int) $name = strip_tags(trim($_POST['forumpager']));
-            $edit = $this->parameters->GetParam(2,'param_id');
-            $this->validator->validPagination($name);
-
+            $name = (int) trim(filter_var($_POST['forumpager'],FILTER_SANITIZE_NUMBER_INT));
+            $edit = (int) trim(filter_var($this->parameters->GetParam(2,'param_id'),FILTER_SANITIZE_NUMBER_INT));
+            $this->validator->optionValidation($name,'10|15|20');
             if($this->validator->isValid())
             {
                 $u = [$name, $edit];
@@ -114,14 +130,20 @@ class AdminAction {
         }
         return $this;
     }
-
+    
+    /**
+     * themeUpdate change le template 
+     *
+     * @return self
+     */
     public function themeUpdate(): self
     {
-        if(isset($_POST['btnThemeName'])){
+        if(isset($_POST['btnThemeName']))
+        {
             $this->app->methodPostValid('POST');
             $this->session->checkCsrf();
             $name = strip_tags(trim($_POST['themeforlayout']));
-            $edit = $this->parameters->GetParam(3,'param_id');
+            $edit = (int) trim(filter_var($this->parameters->GetParam(3,'param_id'),FILTER_SANITIZE_NUMBER_INT));
             $this->validator->validThemeName($name);
 
             if($this->validator->isValid())
@@ -135,40 +157,47 @@ class AdminAction {
         }
         return $this;
     }
-
+    
+    /**
+     * alertForm modifie le contenu|titre de l'alert
+     *
+     * @return self
+     */
     public function alertForm(): self
     {
-        if(isset($_POST['btnAlertForm'])){
+        if(isset($_POST['btnAlertForm']))
+        {
             $this->app->methodPostValid('POST');
             $this->session->checkCsrf();
-
             $name = strip_tags(trim($_POST['alertTitle']));
             $value = strip_tags(trim($_POST['alertContent']));
-
-            $edit = $this->parameters->GetParam(4,'param_id');
-
+            $edit = (int) trim(filter_var($this->parameters->GetParam(4,'param_id'),FILTER_SANITIZE_NUMBER_INT));
             $this->validator->validTtitle($name)->betweenLength($value,30 , 500);
             if($this->validator->isValid())
             {
-                $u = [$name, $value, $edit];
-                $this->cnx->Request("UPDATE parameters SET param_name = ?, param_value = ? WHERE param_id = ?",$u);
-                $this->app->setFlash('Le titre et le contenue du widget alert a bien été validé');
+                $this->cnx->Request("UPDATE parameters SET param_name = ?, param_value = ? WHERE param_id = ?",[$name, $value, $edit]);
+                $this->app->setFlash('Le titre et le contenue du widget alert a bien été modifier');
                 $this->app->redirect($this->router->routeGenerate('admin'));
             }
             $this->errors = $this->validator->getErrors();
-
         }
         return $this;
     }
 
+    /**
+     * alerColor change la couleur de l'alert
+     *
+     * @return self
+     */
     public function alerColor(): self
     {
-        if(isset($_POST['btnAlertColor'])){
+        if(isset($_POST['btnAlertColor']))
+        {
             $this->app->methodPostValid('POST');
             $this->session->checkCsrf();
             $name = strip_tags(trim($_POST['alertColor']));
-            $edit = $this->parameters->GetParam(4,'param_id');
-            $this->validator->alertColor($name);
+            $edit = (int) trim(filter_var($this->parameters->GetParam(4,'param_id'),FILTER_SANITIZE_NUMBER_INT));
+            $this->validator->optionValidation($name,'turquoise|jaune|gris|rouge|orange|marine|bleu|violet|vert');
             if($this->validator->isValid())
             {
                 $u = [$name, $edit];
@@ -181,14 +210,20 @@ class AdminAction {
         return $this;
     }
 
+    /**
+     * activWidget active|desactive le widget aler
+     *
+     * @return self
+     */
     public function activWidget(): self
     {
-        if(isset($_POST['btnActivAlert'])){
+        if(isset($_POST['btnActivAlert']))
+        {
             $this->app->methodPostValid('POST');
             $this->session->checkCsrf();
             $name = strip_tags(trim($_POST['activAlert']));
-            $edit = $this->parameters->GetParam(4,'param_id');
-            $this->validator->validActivParam($name);
+            $edit = (int) trim(filter_var($this->parameters->GetParam(4,'param_id'),FILTER_SANITIZE_NUMBER_INT));
+            $this->validator->optionValidation($name,'oui|non');
             if($this->validator->isValid())
             {
                 $u = [$name, $edit];
