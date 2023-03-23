@@ -31,12 +31,13 @@ class TagAction {
         $this->cnx->Request("DELETE FROM f_topic_tags WHERE topic_id = ? AND tag_id NOT IN (" . implode(",", $tags) . ")",[$topicId]);
         // Ajouter les nouveaux tags qui ne sont pas déjà associés au topic
         // on vérifie que les tags existe via la class validator pas besoin de le faire ici
+        $existingTags = $this->getExistingTopicTags($topicId);
         foreach ($tags as $tag) 
         {
-            if (!$this->getExistingTopicTags($topicId, $tag)) 
+            //on insert que les nouveau tags
+            if (!in_array($tag,$existingTags)) 
             {
-                if($this->getExistingTopicTags($tag))
-                {
+                if($this->tagExists($tag)){
                     $this->cnx->Request("INSERT INTO f_topic_tags (topic_id, tag_id, user_id) VALUES (?, ?, ?)",[$topicId, $tag, $userID]);
                 }
             }
@@ -58,6 +59,16 @@ class TagAction {
         {
             $this->cnx->Request("INSERT INTO f_topic_tags SET tag_id = ?, user_id = ?, topic_id = ?",[$item, $userID , $lastID]);
         }
+    }
+
+    /**
+     * Vérifie si un tag avec l'ID donné existe dans la base de données.
+     * @param int $tagId L'ID du tag à rechercher
+     * @return bool true si le tag existe, false sinon
+     */
+    public function tagExists(int $tagId)
+    {
+        return $this->cnx->CountObj("SELECT COUNT(*) FROM f_topic_tags WHERE id = ?",[$tagId]);
     }
 
     /**
