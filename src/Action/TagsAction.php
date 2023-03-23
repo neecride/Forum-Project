@@ -3,90 +3,77 @@
 namespace Action;
 
 use App;
-use Framework;
 
-class TagsAction {
-    
-	private App\App $app;
+class TagAction {
+
 	private App\Database $cnx;
-	private Framework\Router $router;
 
 	public function __construct()
 	{
-		$this->app 			= new App\App;
-		$this->cnx 			= new App\Database;
-		$this->router 		= new Framework\Router;
+		$this->cnx 	= new App\Database;
  	}
-    
+
     /**
-     * UPDATE|INSERT les tags d'un topic donné dans la table topic_tags.
-     * @param int $topic_id ID du topic à mettre à jour.
-     * @param int $user_id ID de l'auteur | ajout plus tard l'id du modo ou admin qui éditera.
-     * @param array $tags Tableau contenant les nouveaux tags à associer au topic.
-     * @param bool $update si null on fais un insert si true on fais un update 
-     * @return array Tableau contenant les ID des tags mis à jour.
+     * Met à jour les tags associés à un topic
+     * @param int $topicId L'ID du topic
+     * @param array $tags Les nouveaux tags à associer au topic
+     * @param int $userId L'ID de l'utilisateur qui modifie les tags
+     * @return bool true si les tags ont été mis à jour avec succès, false sinon
      */
-    public function fromTopicTags(int $topic_id,int $user_id, array $tags,bool $update = NULL): array 
+    public function updateTopicTags(int $topicId, array $tags, int $userID): bool 
     {
-        $existing_topic_tags = $this->getExistingTopicTags($topic_id);
-        $updated_tags = array();
-        foreach ($tags as $tag) {
-            // Vérifier que le tag est un entier
-            if (is_int($tag) && count($updated_tags) <= 4) 
+        // Vérifier que chaque tag est unique
+        if (count($tags) != count(array_unique($tags))) 
+        {
+            return false; // Il y a des tags en double
+        }
+        // Supprimer les anciens tags qui ne font plus partie de la liste
+        $this->cnx->Request("DELETE FROM f_topic_tags WHERE topic_id = ? AND tag_id NOT IN (" . implode(",", $tags) . ")",[$topicId]);
+        // Ajouter les nouveaux tags qui ne sont pas déjà associés au topic
+        // on vérifie que les tags existe via la class validator pas besoin de le faire ici
+        foreach ($tags as $tag) 
+        {
+            if (!$this->getExistingTopicTags($topicId, $tag)) 
             {
-                if (!in_array($tag, $existing_topic_tags)) 
+                if($this->getExistingTopicTags($tag))
                 {
-                    if (count($existing_topic_tags) <= 4) {
-                        $this->deleteTopicTag($topic_id, $existing_topic_tags[0]);
-                        array_shift($existing_topic_tags);
-                    }
-                    $this->saveTopicTag($topic_id, $user_id, $tag, $update);
-                    $updated_tags[] = $tag;
+                    $this->cnx->Request("INSERT INTO f_topic_tags (topic_id, tag_id, user_id) VALUES (?, ?, ?)",[$topicId, $tag, $userID]);
                 }
             }
         }
-        return $updated_tags;
+        return true; // Les tags ont été mis à jour avec succès
+    }
+
+    /**
+     * insertTagsOnNewTopic insert les tags pour le nouveau topic
+     *
+     * @param  array $tags
+     * @param  int $userID
+     * @param  int $lastID
+     * @return void
+     */
+    public function insertTagsOnNewTopic(array $tags, int $userID, int $lastID): void
+    {
+        foreach($tags as $item)
+        {
+            $this->cnx->Request("INSERT INTO f_topic_tags SET tag_id = ?, user_id = ?, topic_id = ?",[$item, $userID , $lastID]);
+        }
     }
 
     /**
      * Récupère les tags existants pour un topic donné dans la table topic_tags.
-     * @param int $topic_id ID du topic pour lequel récupérer les tags.
+     * @param  $topic_id ID du topic pour lequel récupérer les tags.
      * @return array Tableau contenant les ID des tags existants pour le topic.
      */
-    private function getExistingTopicTags(int $topic_id): array 
+    private function getExistingTopicTags($topic_id): array 
     {
         $stmt = $this->cnx->Request("SELECT tag_id FROM f_topic_tags WHERE topic_id = ?",[$topic_id]);
         $existing_topic_tags = array();
         foreach ($stmt as $row) {
-            $existing_topic_tags[] = $row['tag_id'];
+            $existing_topic_tags[] = $row->tag_id;
         }
         return $existing_topic_tags;
     }
 
-     /**
-     * UPDATE|INSERT a jour un nouveau lien entre un topic et un tag dans la table de jonction topic_tags.
-     * @param int $topic_id ID du topic à associer au tag.
-     * @param int $tag_id ID du tag à associer au topic.
-     * @param bool $update si null on fais un insert si true on fais un update 
-     * @param int $user_id ID de l'auteur | ajout plus tard l'id du modo ou admin qui éditera.
-    */
-    private function saveTopicTag(int $topic_id, int $user_id, int $tag_id,bool $update): void
-    {
-        if($update == NULL){
-            $this->cnx->Request("INSERT INTO f_topic_tags SET topic_id = ?, user_id = ?, tag_id = ?",[$topic_id, $user_id, $tag_id]);
-        }else{
-            $this->cnx->Request("UPDATE FROM f_topic_tags SET tag_id = ? WHERE id = ?",[$tag_id]);
-        }
-    }
 
-    /**
-     * Supprime le lien entre un topic et un tag dans la table de jonction topic_tags.
-     * @param int $topic_id ID du topic associé au tag à supprimer.
-     * @param int $tag_id ID du tag à supprimer.
-     */
-    private function deleteTopicTag(int $topic_id,int $tag_id): void
-    {
-        $this->cnx->Request("DELETE FROM f_topic_tags WHERE topic_id = ? AND tag_id = ?",[$topic_id, $tag_id]);
-    }
-
-}
+  }
