@@ -74,17 +74,19 @@ class Parsing{
 
 	public function checkFilesOptions(string $sql = null)
     {
-		$scandir = scandir(RACINE.DS.'public'.DS.'templates');
-        foreach($scandir as $fichier){
-			$explode = explode('.',$fichier);
+		$fichiers = scandir(RACINE.DS.'public'.DS.'templates');
+        // Parcourt la liste des fichiers et dossiers
+        foreach ($fichiers as $fichier) {
             $selected = null;
-			if(isset($sql) && !empty($sql == $explode[0])){
-				$selected =  ' selected="selected"';
+            if(isset($sql) && !empty($sql == $fichier)){
+                $selected =  ' selected="selected"';
 			}
-			if(preg_match("#\.(txt)$#",strtolower($fichier))){
-				echo "<option value=".$explode[0]." $selected>$explode[0]</option>";
-			}
-		}
+            // Ignore les fichiers qui ne sont pas des dossiers ou le dossier courant ou le dossier parent
+            if (is_dir(RACINE.DS.'public'.DS.'templates' . DS . $fichier) && $fichier !== '.' && $fichier !== '..') {
+                // Affiche le nom du dossier
+                echo "<option value=".$fichier." $selected>$fichier</option>";
+            }
+        }
 	}
 
     public function select($id, $options = [])
