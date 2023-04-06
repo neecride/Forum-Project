@@ -22,8 +22,6 @@ class Router {
 
       //user account
       $router->map('GET|POST', '/account', 'account','account');
-      $router->map('GET|POST', '/survey', 'survey','survey');
-      $router->map('GET|POST', '/account-edit', 'account-edit','account-edit');
 
       //forum
       $router->map('GET'     , '/forum', 'forum', 'forum');
@@ -33,20 +31,19 @@ class Router {
       $router->map('GET|POST', '/lock-[i:id]-[i:lock]-[*:getcsrf]', 'viewtopic','lock');
       $router->map('GET|POST', '/unlock-[i:id]-[i:lock]-[*:getcsrf]', 'viewtopic','unlock');
       $router->map('GET|POST', '/creattopic', 'creattopic','creattopic');
-      $router->map('GET|POST', '/editetopic-[i:id]', 'editetopic','editetopic');
-      $router->map('GET|POST', '/editerep-[i:id]', 'editerep','editerep');
+      $router->map('GET|POST', '/edittopic-[i:id]', 'edittopic','edittopic');
+      $router->map('GET|POST', '/editrep-[i:id]', 'editrep','editrep');
 
       //administration
       $router->map('GET|POST', '/admin/dashboard', 'admin','admin');
       $router->map('GET'     , '/admin/user', 'user','user');
-      $router->map('GET|POST', '/admin/user-edit-[i:id]-[*:getcsrf]', 'user-edit','user-edit');
-      $router->map('GET|POST', '/admin/user-delete-[i:delid]-[i:rank]-[*:getcsrf]', 'user','user-delete');
-      $router->map('GET|POST', '/admin/user-active-[i:activid]-[i:rank]-[*:getcsrf]', 'user','user-active');
+      $router->map('GET|POST', '/admin/user-edit-[i:id]-[*:getcsrf]', 'useredit','user-edit');
+      $router->map('GET|POST', '/admin/user-delete-[i:del]-[i:rank]-[*:getcsrf]', 'user','user-delete');
+      $router->map('GET|POST', '/admin/user-active-[i:activ]-[i:rank]-[*:getcsrf]', 'user','user-active');
       $router->map('GET|POST', '/admin/user-desactive-[i:unactiv]-[i:rank]-[*:getcsrf]', 'user','user-desactive');
       $router->map('GET'     , '/admin/tags', 'tags','tags');
-      $router->map('GET|POST', '/admin/tags-add', 'tags-edit','tags-add');
-      $router->map('GET|POST', '/admin/tags-edit-[*:editid]-[*:getcsrf]', 'tags-edit','tags-edit');
-      $router->map('GET|POST', '/admin/tags-delete-[*:delid]-[*:getcsrf]', 'tags-edit','tags-delete');
+      $router->map('GET|POST', '/admin/tags-add', 'tagsedit','tags-add');
+      $router->map('GET|POST', '/admin/tags-edit-[*:editid]-[*:getcsrf]', 'tagsedit','tags-edit');
 
       return $router;
     }
@@ -73,23 +70,183 @@ class Router {
       return $this->Route()->match();
     }
 
-
     /**
      * webroot 
      *
      * @return void
      */
-    public function webroot(){
-      $path = dirname(dirname(__FILE__));
+    public function webroot()
+    {
+        $path = dirname(dirname(__FILE__));
 
-      $directory = basename($path);
-      $url = explode($directory, $_SERVER['REQUEST_URI']);
-      if(count($url) == 1){
-          $absolute = '/';
-      }else{
-          $absolute = $url[0] . $directory .'/';
-      }
-      return $absolute;
+        $directory = basename($path);
+        $url = explode($directory, $_SERVER['REQUEST_URI']);
+        if(count($url) == 1){
+            $absolute = DIRECTORY_SEPARATOR;
+        }else{
+            $absolute = $url[0] . $directory . DIRECTORY_SEPARATOR;
+        }
+        return $absolute;
+    }
+
+    public function home()
+    {
+        if($this->matchRoute()['target'] === 'home')
+        {
+          return (new \Controllers\ForumController)->home();
+        }
+    }
+
+    public function forum()
+    {
+        if($this->matchRoute()['target'] === 'forum')
+        {
+          return (new \Controllers\ForumController)->forum();
+        }
+    }
+
+    public function viewforums()
+    {
+        if($this->matchRoute()['target'] === 'viewforums')
+        {
+          return (new \Controllers\ForumController)->viewforum($this->matchRoute()['params']['id']);
+        }
+    }
+
+    public function viewtopic()
+    {
+        if($this->matchRoute()['target'] === 'viewtopic')
+        {
+          return (new \Controllers\ForumController)->viewtopic($this->matchRoute()['params']['id']);
+        }
+    }
+
+    public function creatTopic()
+    {
+        if($this->matchRoute()['target'] === 'creattopic')
+        {
+          return (new \Controllers\ForumController)->creatTopic();
+        }
+    }
+
+    public function editRep()
+    {
+        if($this->matchRoute()['target'] === 'editrep')
+        {
+          return (new \Controllers\ForumController)->editRep();
+        }
+    }
+
+    public function editTopic()
+    {
+        if($this->matchRoute()['target'] === 'edittopic')
+        {
+          return (new \Controllers\ForumController)->editTopic();
+        }
+    }
+
+    public function account()
+    {
+        if($this->matchRoute()['target'] === 'account')
+        {
+          return (new \Controllers\AccountController)->account();
+        }
+    }
+
+    public function admin()
+    {
+        if($this->matchRoute()['target'] === 'admin')
+        {
+          return (new \Controllers\AdminController)->admin();
+        }
+    }
+
+    public function tags()
+    {
+        if($this->matchRoute()['target'] === 'tags')
+        {
+          return (new \Controllers\AdminController)->tags();
+        }
+    }
+
+    public function tagsEdit()
+    {
+        if($this->matchRoute()['target'] === 'tagsedit')
+        {
+          return (new \Controllers\AdminController)->tagsEdit();
+        }
+    }
+
+    public function user()
+    {
+        if($this->matchRoute()['target'] === 'user')
+        {
+          return (new \Controllers\AdminController)->user();
+        }
+    }
+
+    public function userEdit()
+    {
+        if($this->matchRoute()['target'] === 'useredit')
+        {
+          return (new \Controllers\AdminController)->userEdit();
+        }
+    }
+
+    public function error()
+    {
+        if($this->matchRoute()['target'] === 'error')
+        {
+          return (new \Controllers\SiteController)->error();
+        }
+    }
+
+    public function logout()
+    {
+        if($this->matchRoute()['target'] === 'logout')
+        {
+          return (new \Controllers\SiteController)->logout();
+        }
+    }
+
+    public function login()
+    {
+        if($this->matchRoute()['target'] === 'login')
+        {
+          return (new \Controllers\SiteController)->login();
+        }
+    }
+
+    public function register()
+    {
+        if($this->matchRoute()['target'] === 'register')
+        {
+          return (new \Controllers\RegisterController)->register();
+        }
+    }
+
+    public function remember()
+    {
+        if($this->matchRoute()['target'] === 'remember')
+        {
+          return (new \Controllers\RegisterController)->remember();
+        }
+    }
+
+    public function confirm()
+    {
+        if($this->matchRoute()['target'] === 'confirm')
+        {
+          return (new \Controllers\RegisterController)->confirm();
+        }
+    }
+
+    public function reset()
+    {
+        if($this->matchRoute()['target'] === 'reset')
+        {
+          return (new \Controllers\RegisterController)->reset();
+        }
     }
 
 }
