@@ -76,7 +76,7 @@ class Parsing{
     {
 		$fichiers = scandir(RACINE.DS.'public'.DS.'templates');
         // Parcourt la liste des fichiers et dossiers
-        foreach ($fichiers as $fichier) {
+        foreach ($fichiers as $fichier) :
             $selected = null;
             if(isset($sql) && !empty($sql == $fichier)){
                 $selected =  ' selected="selected"';
@@ -86,7 +86,7 @@ class Parsing{
                 // Affiche le nom du dossier
                 echo "<option value=".$fichier." $selected>$fichier</option>";
             }
-        }
+        endforeach;
 	}
 
     public function select($id, $options = [])
