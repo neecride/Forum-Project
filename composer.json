@@ -6,7 +6,12 @@
         }
     ],
     "autoload": {
-      "psr-4": {"App\\": "src/App/" ,"Framework\\": "src/Framework/","Action\\": "src/Action/"}
+      "psr-4": {
+        "App\\": "src/App/" ,
+        "Framework\\": "src/Framework/",
+        "Action\\": "src/Action/",
+        "Controllers\\": "src/Controllers/"
+    }
     },
     "require": {
         "altorouter/altorouter": "^2.0",
@@ -15,6 +20,6 @@
         "erusev/parsedown": "^1.7",
         "ausi/slug-generator": "^1.1",
         "php-di/php-di": "^7.0",
-        "kartik-v/krajee-markdown-editor": "^1.0"
+        "twig/twig": "^3.5"
     }
 }
