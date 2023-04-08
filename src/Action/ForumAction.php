@@ -507,7 +507,7 @@ class ForumAction{
      * @param  mixed $class
      * @return mixed
      */
-    public function renderAvatar(string $file, ?string $class = null)
+    public function renderAvatar(?string $file, ?string $class = null)
     {
         if(!empty($file)){
             return "<img class='$class' src='" . $this->router->webroot() . "inc/img/avatars/" . $file . "' draggable='false' alt='' />";
