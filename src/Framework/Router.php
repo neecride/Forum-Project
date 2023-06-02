@@ -8,6 +8,8 @@ class Router {
 
     private function Route()
     {
+      //               action  >  route >  file >  get name
+      //$router->map('GET|POST', '/home', 'home','home');
       $router = new AltoRouter();
 
       $router->map('GET|POST', '/', 'home');
@@ -44,6 +46,7 @@ class Router {
       $router->map('GET'     , '/admin/tags', 'tags','tags');
       $router->map('GET|POST', '/admin/tags-add', 'tagsedit','tags-add');
       $router->map('GET|POST', '/admin/tags-edit-[*:editid]-[*:getcsrf]', 'tagsedit','tags-edit');
+      $router->map('GET|POST', '/admin/widget-alert', 'widgetalert','widget-alert');
 
       return $router;
     }
@@ -88,6 +91,11 @@ class Router {
         }
         return $absolute;
     }
+
+
+    /*
+    * target === file name
+    */
 
     public function home()
     {
@@ -158,6 +166,14 @@ class Router {
         if($this->matchRoute()['target'] === 'admin')
         {
           return (new \Controllers\AdminController)->admin();
+        }
+    }
+
+    public function widgetAlert()
+    {
+        if($this->matchRoute()['target'] === 'widgetalert')
+        {
+          return (new \Controllers\AdminController)->widgetAlert();
         }
     }
 
@@ -248,5 +264,7 @@ class Router {
           return (new \Controllers\RegisterController)->reset();
         }
     }
+
+
 
 }
