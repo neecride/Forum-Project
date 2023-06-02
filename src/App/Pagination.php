@@ -159,8 +159,8 @@ Class Pagination {
 	{
 
 		$t = (int) ceil($countid/$this->parameters->GetParam(2));
-		if($this->parameters->GetParam(2) >= $t){
-			if($t == 1){
+		if($this->parameters->GetParam(2) >= 1){
+			if($t === 1){
 			  $userLinkPage =  $this->router->routeGenerate('viewtopic', ['id' => $id]).'#rep-' . $idrep;
 			}else{
 			  $userLinkPage =  $this->router->routeGenerate('viewtopic', ['id' => $id]).'?page='.$t.'#rep-' . $idrep;
@@ -213,31 +213,26 @@ Class Pagination {
 	}
 
 	/*
-	* génère un lien qui pointe vers la bonne page 
-	* javascript si les liens généré sont superieur a 10 alors faire une fonction pour coullissé les nombre avec les flèche
+	* génère un lien qui pointe vers la bonne page
+	* javascript si les liens généré sont superieur a 10 alors faire une fonction pour slider les nombres avec les flèche
 	*/
 	public function tinyLinkPage(int $id,int $countid)
-	{ 
-		
+	{
 		$t = (int) ceil($countid/$this->parameters->GetParam(2));
 		if($t > 1){
 			echo '<div class="uri">';
 				echo '<span id="urileft"><i class="fas fa-caret-left"></i></span>';
-
-					for($i=1; $i <= $t; $i++){ 
-
+					for($i=1; $i <= $t; $i++)
+					{
 						if($i == 1){
-							echo "<a href=".$this->router->routeGenerate('viewtopic', ['id' => $id]).">$i</a>";
+							echo "<a class=\"item\" href=".$this->router->routeGenerate('viewtopic', ['id' => $id]).">$i</a>";
 						}elseif($i >= 2){
-							echo "<a href=".$this->router->routeGenerate('viewtopic', ['id' => $id]).'?page='.$i.">$i</a>";
+							echo "<a class=\"item\" href=".$this->router->routeGenerate('viewtopic', ['id' => $id]).'?page='.$i.">$i</a>";
 						}
-		
 					}
-
 				echo '<span id="uriright"><i class="fas fa-caret-right"></i></span>';
 			echo '</div>';
 		}
-
 	}
 
 	/*
@@ -245,14 +240,13 @@ Class Pagination {
 	*/
 	public function pageFor()
 	{
-
 		$match = $this->router->matchRoute();
 		if($this->isPage() >= 2):
 			if(isset($match['name']) && $match['name'] == 'forum-tags'){
 				$url = $this->router->routeGenerate($match['name'], ['slug' => $match['params']['slug'], 'id' => $match['params']['id']]);
 			}elseif(isset($match['name']) && $match['name'] == 'viewtopic'){
 				$url = $this->router->routeGenerate($match['name'], ['id' => $match['params']['id']]);
-			}elseif(isset($match['name']) && in_array($match['name'], ['forum','survey'])){
+			}elseif(isset($match['name']) && in_array($match['name'], ['forum'])){
 				$url = $this->router->routeGenerate($match['name']);
 			}
 			$nb=2;
