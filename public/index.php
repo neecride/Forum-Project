@@ -4,7 +4,7 @@ if(session_status() === PHP_SESSION_NONE)
     session_start();
 }
 session_regenerate_id();
-
+date_default_timezone_set('Europe/Paris');
 define            ('DS', DIRECTORY_SEPARATOR);
 define            ('RACINE', dirname(__DIR__));
 require           (RACINE.DS.'vendor'.DS.'autoload.php');
@@ -48,7 +48,7 @@ if(is_array($match)):
     endif;
 
 else:
-    $app->setFlash("Cette page n'éxiste pas",'orange');
+    //$app->setFlash("Cette page n'éxiste pas",'orange');
     http_response_code(404);
     $app->redirect($router->routeGenerate('error'));
 endif;
