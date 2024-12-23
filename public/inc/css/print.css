@@ -1,0 +1,39 @@
+@page { 
+size: portrait;
+margin: 2cm
+} 
+
+.hide-print,
+.btn{
+display:none
+}
+
+body {
+background-color :#fff;
+font-family:Serif;
+font-size :10pt;
+}
+
+a img{ border:none }
+a:after { content: " [" attr(href) "] "; }
+   
+h1, h2, h3{
+font-family: verdana, serif;
+}
+
+article p{
+text-align:justify
+}
+
+.inline-block{ display: inline-block; vertical-align: top }
+.hide{ display: none }
+.clear{ clear: both }
+.floatl{ float:left;margin:5px 20px 5px 0px}
+.floatr{ float:right;margin:5px 0px 5px 20px}
+.center{ text-align: center }
+.right { text-align: right }
+.justify { text-align: justify }
+.uppercase { text-transform: uppercase }
+.bold { font-weight: bold }
+.strike { text-decoration: line-through }
+.italic { font-style: italic }
