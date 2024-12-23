@@ -1,0 +1,58 @@
+/* Create a sticky/fixed navbar */
+ #boxnavbar {
+    overflow: hidden;
+    padding: 30px 10px; /* Large padding which will shrink on scroll (using JS) */
+    transition: 0.4s; /* Adds a transition effect when the padding is decreased */
+    position: fixed; /* Sticky/fixed navbar */
+    width: 100%;
+    top: 0; /* At the top */
+    z-index: 90;
+    transition: all .2s;
+}
+
+.header-left{
+    color: #fff;
+    padding: 10px 30px;
+    position: fixed;
+    left: 0;
+    z-index: 100;
+}
+
+#logo{
+    color: #fff;
+    font-size: 30px;
+    transition: all .2s;
+}
+
+.header-right{
+    cursor: pointer;
+    color: #fff;
+    padding: 16px 30px;
+    position: fixed;
+    right: 0;
+    z-index: 100;
+    margin-top: 10px;
+}
+
+.header-separation {
+    background-color: #fff;
+    margin: 0 5px 0 5px;
+    width: 2px;
+    height: 10px;
+    display: inline-block;
+}
+
+#roundednav{
+    padding: 10px;
+    border-radius: 50px;
+    backdrop-filter: blur(60px) saturate(100%);
+    -webkit-backdrop-filter: blur(60px) saturate(100%);
+    background-color: transparent;
+    -moz-box-shadow: 0 0 1px 3px rgba(0, 0, 0, 0.3);
+    -webkit-box-shadow: 0 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 1px 3px rgba(0, 0, 0, 0.3);
+    width: fit-content;
+    margin: auto;
+    transition: all .2s;
+    position: relative;
+}
